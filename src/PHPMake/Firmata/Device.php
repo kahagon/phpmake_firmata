@@ -15,6 +15,7 @@ class Device extends SerialPort {
                 ->setCanonical(false)
                 ->setVTime(1)
                 ->setVMin(0);
+        $ret = $this->flush();
         $this->_prepare();
     }
     
@@ -64,15 +65,6 @@ class Device extends SerialPort {
         return $firmware;
     }
 
-
-    public function queryVersion() {
-        $this->voidBuffer();
-        $this->_requestVersion();
-        return $this->_receiveVersion();
-    }
-    private function _requestVersion() {
-        $this->write(pack('C', 0xF9));
-    }
     private function _receiveVersion() { 
         $this->_saveVTimeVMin();
         $this->setVTime(0)->setVMin(3);
@@ -91,7 +83,7 @@ class Device extends SerialPort {
     function voidBuffer() {
         $this->_saveVTimeVMin();
         $this->setVTime(1)->setVMin(0);
-        while ($r=$p->read(1024))
+        while ($r=$this->read(1024))
             ;
         $this->_restoreVTimeVMin();
     }
