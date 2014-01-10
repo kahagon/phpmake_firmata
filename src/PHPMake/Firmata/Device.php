@@ -42,14 +42,7 @@ class Device extends SerialPort {
         $d = $this->read(1); // Firmata::QUERY_FIRMWARE
         $majorVersion = $this->read(1);
         $minorVersion = $this->read(1);
-        
-        while ($d=$this->read(1)) {
-            $_d = unpack('C', $d);
-            if (Firmata::SYSEX_END==$_d[1]) {
-                break;
-            }
-            $firmwareName .= $d;
-        }
+        $firmwareName = $this->_receiveSysEx7bitBytesData();
         $this->_restoreVTimeVMin();
 
         $t = unpack('H2', $majorVersion);
@@ -59,23 +52,54 @@ class Device extends SerialPort {
     
         $firmware = (object)array(
             'name' => $firmwareName,
-            'majorVersion' => $majorVersionString,
-            'minorVersion' => $minorVersionString
+            'majorVersion' => (int)$majorVersionString,
+            'minorVersion' => (int)$minorVersionString
         );
         return $firmware;
     }
 
+    private function _receiveSysEx7bitBytesData() {
+        $data7bitByteArray = array();
+        $data = '';
+        while ($d=$this->read(1)) {
+            $_d = unpack('C', $d);
+            if (Firmata::SYSEX_END==$_d[1]) {
+                break;
+            }
+            $data7bitByteArray[] = $_d[1];
+        }
+
+        $length = count($data7bitByteArray);
+        for ($i=0; $i<$length-1; $i+=2) {
+            $firstValue = $data7bitByteArray[$i] & 0x7F;
+            $secondValue = ($data7bitByteArray[$i+1] & 0x7F)<<7;
+
+            $data .= pack('C', $firstValue|$secondValue);
+        }
+
+        return $data;
+    }
+
     private function _receiveVersion() { 
         $this->_saveVTimeVMin();
-        $this->setVTime(0)->setVMin(3);
-        $data = $this->read(3);
-        $t = unpack('H2', substr($data, 1, 1));
+        $this->setVTime(0)->setVMin(1);
+        while ($data=$this->read(1)) {
+            $t = unpack('C', $data);
+            $_t = $t[1];
+            if ($_t==Firmata::REPORT_VERSION) {
+                break;
+            }
+        }
+
+        $this->setVTime(0)->setVMin(2);
+        $data = $this->read(2);
+        $t = unpack('H2', substr($data, 0, 1));
         $majorVersionString = $t[1];
-        $t = unpack('H2', substr($data, 2, 1));
+        $t = unpack('H2', substr($data, 1, 1));
         $minorVersionString = $t[1];
         $version = (object)array(
-            'majorVersion' => $majorVersionString,
-            'minorVersion' => $minorVersionString);
+            'majorVersion' => (int)$majorVersionString,
+            'minorVersion' => (int)$minorVersionString);
         $this->_restoreVTimeVMin();
         return $version;
     }
@@ -99,13 +123,7 @@ class Device extends SerialPort {
     }
 
     private function _prepare() {
-        $this->_prepareVersion();
-        $this->_prepareFirmwareVersion();
-    }
-    private function _prepareVersion() {
-        $version = $this->_receiveVersion();
-    }
-    private function _prepareFirmwareVersion() {
-        $firmware = $this->_receiveFirmwareVersion();
+        $this->_receiveVersion();
+        $this->_receiveFirmwareVersion();
     }
 }
