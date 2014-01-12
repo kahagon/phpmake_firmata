@@ -5,7 +5,6 @@ use PHPMake\SerialPort as SerialPort;
 use PHPMake\Firmata as Firmata;
 
 class Device extends SerialPort {
-    private $_deviceName;
     private $_savedVTime;
     private $_savedVMin;
 
@@ -15,7 +14,6 @@ class Device extends SerialPort {
                 ->setCanonical(false)
                 ->setVTime(1)
                 ->setVMin(0);
-        $ret = $this->flush();
         $this->_prepare();
     }
     
