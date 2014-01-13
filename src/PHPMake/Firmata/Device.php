@@ -102,7 +102,9 @@ class Device extends SerialPort {
         return $version;
     }
 
-    public function waitForData(array $byteArray) {
+    public function waitData(array $byteArray) {
+        $this->_saveVTimeVMin();
+        $this->setVTime(0)->setVMin(1);
         $length = count($byteArray);
         $index = 0;
         while (true) {
@@ -121,6 +123,7 @@ class Device extends SerialPort {
                 $index = 0; // reset
             }
         }
+        $this->_restoreVTimeVMin();
     }
 
 
