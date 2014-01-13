@@ -102,6 +102,28 @@ class Device extends SerialPort {
         return $version;
     }
 
+    public function waitForData(array $byteArray) {
+        $length = count($byteArray);
+        $index = 0;
+        while (true) {
+            $data = $this->read(1);
+            if (!$data) continue;
+
+            $u = unpack('C', $data);
+            $t = $u[1];
+            if ($t == $byteArray[$index]) {
+                if ($index == $length-1) {
+                    break;
+                } else {
+                    ++$index;
+                }
+            } else {
+                $index = 0; // reset
+            }
+        }
+    }
+
+
     function voidBuffer() {
         $this->_saveVTimeVMin();
         $this->setVTime(1)->setVMin(0);
