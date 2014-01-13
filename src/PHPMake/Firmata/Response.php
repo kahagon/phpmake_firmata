@@ -1,6 +1,5 @@
 <?php
 namespace PHPMake\Firmata;
-use PHPMake\SerialPort;
 
 interface Response {
 
@@ -10,5 +9,6 @@ interface Response {
      * @param PHPMake\SerialPort $dev
      * @return mixed
      */
-    public function receive(SerialPort $dev);
+    public function receive(PHPMake\SerialPort $dev);
+
 }
