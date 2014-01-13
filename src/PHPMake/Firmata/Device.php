@@ -17,18 +17,18 @@ class Device extends SerialPort {
         $this->_prepare();
     }
     
-    public function queryFirmwareVersion() {
+    public function queryFirmware() {
         $this->voidBuffer();
-        $this->_requestFirmwareVersion();
-        return $this->_receiveFirmwareVersion();
+        $this->_requestFirmware();
+        return $this->_receiveFirmware();
     }
-    private function _requestFirmwareVersion() {
+    private function _requestFirmware() {
         $this->write(pack('CCC', 
                 Firmata::SYSEX_START, 
                 Firmata::QUERY_FIRMWARE, 
                 Firmata::SYSEX_END));
     }
-    private function _receiveFirmwareVersion() {
+    private function _receiveFirmware() {
         $firmwareName = '';
         $majorVersion = null;
         $minorVersion = null;
@@ -122,6 +122,6 @@ class Device extends SerialPort {
 
     private function _prepare() {
         $this->_receiveVersion();
-        $this->_receiveFirmwareVersion();
+        $this->_receiveFirmware();
     }
 }
