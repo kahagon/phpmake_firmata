@@ -102,15 +102,23 @@ class Device extends SerialPort {
         return $version;
     }
 
+    /**
+     * Wait for data sequence to arrive.
+     *
+     * @param int[] $byteArray array of unsigned chars
+     * @return string received binary data
+     */
     public function waitData(array $byteArray) {
+        $data = '';
         $this->_saveVTimeVMin();
         $this->setVTime(0)->setVMin(1);
         $length = count($byteArray);
         $index = 0;
         while (true) {
-            $data = $this->read(1);
-            if (!$data) continue;
+            $d = $this->read(1);
+            if (!$d) continue;
 
+            $data .= $d;
             $u = unpack('C', $data);
             $t = $u[1];
             if ($t == $byteArray[$index]) {
@@ -124,6 +132,7 @@ class Device extends SerialPort {
             }
         }
         $this->_restoreVTimeVMin();
+        return $data;
     }
 
 
