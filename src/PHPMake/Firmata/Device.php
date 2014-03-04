@@ -19,12 +19,12 @@ class Device extends SerialPort {
         $this->_prepare();
     }
 
-    public function request(Query $query) {
+    public function query(Query $query) {
         $query->request($this);
         return $query->receive($this);
     }
 
-    public function requestFirmware() {
+    public function queryFirmware() {
         $query = new Query\Firmware(); 
         return $this->request($query);
     }
