@@ -1,12 +1,14 @@
 <?php
 namespace PHPMake\Firmata;
-require_once dirname(__FILE__) . '/../Firmata.php';
-use PHPMake\SerialPort as SerialPort;
-use PHPMake\Firmata as Firmata;
+use PHPMake\SerialPort;
+use PHPMake\Firmata;
+use PHPMake\Firmata\Query;
 
 class Device extends SerialPort {
     private $_savedVTime;
     private $_savedVMin;
+    protected $_firmware;
+    protected $_version;
 
     public function __construct($deviceName, $baudRate=57600) {
         parent::__construct($deviceName);
@@ -16,47 +18,18 @@ class Device extends SerialPort {
                 ->setVMin(0);
         $this->_prepare();
     }
+
+    public function request(Query $query) {
+        $query->request($this);
+        return $query->receive($this);
+    }
+
+    public function requestFirmware() {
+        $query = new Query\Firmware(); 
+        return $this->request($query);
+    }
     
-    public function queryFirmware() {
-        $this->voidBuffer();
-        $this->_requestFirmware();
-        return $this->_receiveFirmware();
-    }
-    private function _requestFirmware() {
-        $this->write(pack('CCC', 
-                Firmata::SYSEX_START, 
-                Firmata::QUERY_FIRMWARE, 
-                Firmata::SYSEX_END));
-    }
-    private function _receiveFirmware() {
-        $firmwareName = '';
-        $majorVersion = null;
-        $minorVersion = null;
-
-        $this->_saveVTimeVMin();
-
-        $this->setVTime(0)->setVMin(1);
-        $d = $this->read(1); // Firmata::SYSEX_START
-        $d = $this->read(1); // Firmata::QUERY_FIRMWARE
-        $majorVersion = $this->read(1);
-        $minorVersion = $this->read(1);
-        $firmwareName = $this->_receiveSysEx7bitBytesData();
-        $this->_restoreVTimeVMin();
-
-        $t = unpack('H2', $majorVersion);
-        $majorVersionString = $t[1];
-        $t = unpack('H2', $minorVersion);
-        $minorVersionString = $t[1];
-    
-        $firmware = (object)array(
-            'name' => $firmwareName,
-            'majorVersion' => (int)$majorVersionString,
-            'minorVersion' => (int)$minorVersionString
-        );
-        return $firmware;
-    }
-
-    private function _receiveSysEx7bitBytesData() {
+    public function receiveSysEx7bitBytesData() {
         $data7bitByteArray = array();
         $data = '';
         while ($d=$this->read(1)) {
@@ -76,30 +49,6 @@ class Device extends SerialPort {
         }
 
         return $data;
-    }
-
-    private function _receiveVersion() { 
-        $this->_saveVTimeVMin();
-        $this->setVTime(0)->setVMin(1);
-        while ($data=$this->read(1)) {
-            $t = unpack('C', $data);
-            $_t = $t[1];
-            if ($_t==Firmata::REPORT_VERSION) {
-                break;
-            }
-        }
-
-        $this->setVTime(0)->setVMin(2);
-        $data = $this->read(2);
-        $t = unpack('H2', substr($data, 0, 1));
-        $majorVersionString = $t[1];
-        $t = unpack('H2', substr($data, 1, 1));
-        $minorVersionString = $t[1];
-        $version = (object)array(
-            'majorVersion' => (int)$majorVersionString,
-            'minorVersion' => (int)$minorVersionString);
-        $this->_restoreVTimeVMin();
-        return $version;
     }
 
     /**
@@ -155,7 +104,9 @@ class Device extends SerialPort {
     }
 
     private function _prepare() {
-        $this->_receiveVersion();
-        $this->_receiveFirmware();
+        $versionQuery = new Query\Version(); 
+        $this->_version = $versionQuery->receive($this);
+        $firmwareQuery = new Query\Firmware(); 
+        $this->_firmware = $firmwareQuery->receive($this);
     }
 }
