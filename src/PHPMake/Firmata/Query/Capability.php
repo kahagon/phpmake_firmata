@@ -21,29 +21,22 @@ class Capability extends AbstractQuery {
         $d = $device->read(1); // Firmata::RESPONCE_CAPABILITY
         $endOfSysExData = false;
         for (;;) {
-            $pin = array(
-                Firmata::INPUT => new Device\PinCapability(Firmata::INPUT),
-                Firmata::OUTPUT => new Device\PinCapability(Firmata::OUTPUT),
-                Firmata::ANALOG => new Device\PinCapability(Firmata::ANALOG),
-                Firmata::PWM => new Device\PinCapability(Firmata::PWM),
-                Firmata::SERVO => new Device\PinCapability(Firmata::SERVO),
-                Firmata::I2C => new Device\PinCapability(Firmata::I2C),
-            );
+            $pinCapability = new Device\PinCapability();
 
             for (;;) {
                 $_d = unpack('C', $device->read(1));
-                $pinCapabilityCode = $_d[1];
-                if ($pinCapabilityCode == 0x7F) {
+                $code = $_d[1];
+                if ($code == 0x7F) {
                     break;
-                } else if ($pinCapabilityCode == Firmata::SYSEX_END) { 
+                } else if ($code == Firmata::SYSEX_END) { 
                     $endOfSysExData = true;
                     break;
                 }
                 $_d = unpack('C', $device->read(1));
                 $resolution = $_d[1];
-                $pin[$pinCapabilityCode]->resolution = $resolution;
+                $pinCapability->setCapability($code, $resolution);
             }
-            $capability[] = $pin;
+            $capability[] = $pinCapability;
             if ($endOfSysExData) {
                 break;
             }
