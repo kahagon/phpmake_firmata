@@ -24,11 +24,14 @@ class Device extends SerialPort {
         return $query->receive($this);
     }
 
-    public function queryFirmware() {
-        $query = new Query\Firmware(); 
-        return $this->request($query);
+    public function getFirmware() {
+        return $this->_firmware;
     }
-    
+
+    public function getVersion() {
+        return $this->_version;
+    }
+
     public function receiveSysEx7bitBytesData() {
         $data7bitByteArray = array();
         $data = '';
