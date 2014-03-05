@@ -18,7 +18,7 @@ class Capability extends AbstractQuery {
         $this->_saveVTimeVMin($device);
         $device->setVTime(0)->setVMin(1);
         $d = $device->read(1); // Firmata::SYSEX_START
-        $d = $device->read(1); // Firmata::RESPONCE_CAPABILITY
+        $d = $device->read(1); // Firmata::RESPONSE_CAPABILITY
         $endOfSysExData = false;
         for (;;) {
             $pinCapability = new Device\PinCapability();

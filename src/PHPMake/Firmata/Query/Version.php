@@ -8,7 +8,7 @@ class Version extends AbstractQuery {
 
     public function request(Device $device) {
         $device->write(pack('C', 
-            Firmata::QUERY_VERSION));
+            Firmata::REPORT_VERSION));
 
     }
 
