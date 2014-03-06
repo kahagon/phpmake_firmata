@@ -14,24 +14,15 @@ class Firmware extends AbstractQuery {
     }
 
     public function receive(Device $device) {
-        $firmwareName = '';
-        $majorVersion = null;
-        $minorVersion = null;
-
         $this->_saveVTimeVMin($device);
 
         $device->setVTime(0)->setVMin(1);
-        $d = $device->read(1); // Firmata::SYSEX_START
-        $d = $device->read(1); // Firmata::QUERY_FIRMWARE
-        $majorVersion = $device->read(1);
-        $minorVersion = $device->read(1);
+        $device->getc(); // Firmata::SYSEX_START
+        $device->getc(); // Firmata::QUERY_FIRMWARE
+        $majorVersionString = $device->getc();
+        $minorVersionString = $device->getc();
         $firmwareName = $device->receiveSysEx7bitBytesData();
         $this->_restoreVTimeVMin($device);
-
-        $t = unpack('H2', $majorVersion);
-        $majorVersionString = $t[1];
-        $t = unpack('H2', $minorVersion);
-        $minorVersionString = $t[1];
     
         $firmware = (object)array(
             'name' => $firmwareName,
