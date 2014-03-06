@@ -32,6 +32,11 @@ class Device extends SerialPort {
         return $this->_version;
     }
 
+    public function getc() {
+        $_d = unpack('C', $this->read(1));
+        return $_d[1];
+    }
+    
     public function receiveSysEx7bitBytesData() {
         $data7bitByteArray = array();
         $data = '';

@@ -17,28 +17,28 @@ class Capability extends AbstractQuery {
         $capability = array();
         $this->_saveVTimeVMin($device);
         $device->setVTime(0)->setVMin(1);
-        $d = $device->read(1); // Firmata::SYSEX_START
-        $d = $device->read(1); // Firmata::RESPONSE_CAPABILITY
+        $device->getc(); // Firmata::SYSEX_START
+        $device->getc(); // Firmata::RESPONSE_CAPABILITY
         $endOfSysExData = false;
         for (;;) {
             $pinCapability = new Device\PinCapability();
 
             for (;;) {
-                $_d = unpack('C', $device->read(1));
-                $code = $_d[1];
+                $code = $device->getc();
                 if ($code == 0x7F) {
                     break;
                 } else if ($code == Firmata::SYSEX_END) { 
                     $endOfSysExData = true;
                     break;
                 }
-                $_d = unpack('C', $device->read(1));
-                $resolution = $_d[1];
+                $resolution = $device->getc();
                 $pinCapability->setCapability($code, $resolution);
             }
-            $capability[] = $pinCapability;
+            
             if ($endOfSysExData) {
                 break;
+            } else {
+                $capability[] = $pinCapability;    
             }
         }
         $this->_restoreVTimeVMin($device);
