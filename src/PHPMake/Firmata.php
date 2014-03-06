@@ -9,6 +9,8 @@ class Firmata {
     const REPORT_VERSION = 0xF9;
     const QUERY_CAPABILITY = 0x6B;
     const RESPONSE_CAPABILITY = 0x6C;
+    const QUERY_PIN_STATE = 0x6D;
+    const RESPONCE_PIN_STATE = 0x6E;
 
     const INPUT = 0x00;
     const OUTPUT = 0x01;
