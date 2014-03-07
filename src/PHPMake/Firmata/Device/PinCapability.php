@@ -35,4 +35,28 @@ class PinCapability {
 
         return $this->_capability[$code] != 0;
     }
+    
+    public function isInput() {
+        return $this->isSupported(Firmata::INPUT);
+    }
+    
+    public function isOutput() {
+        return $this->isSupported(Firmata::OUTPUT);
+    }
+    
+    public function isAnalog() {
+        return $this->isSupported(Firmata::ANALOG);
+    }
+    
+    public function isPWM() {
+        return $this->isSupported(Firmata::PWM);
+    }
+    
+    public function isServo() {
+        return $this->isSupported(Firmata::SERVO);
+    }
+    
+    public function isI2C() {
+        return $this->isSupported(Firmata::I2C);
+    }
 }
