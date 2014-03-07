@@ -11,6 +11,7 @@ class Device extends SerialPort {
     protected $_firmware;
     protected $_version;
     protected $_pins;
+    protected $_capability;
 
     public function __construct($deviceName, $baudRate=57600) {
         parent::__construct($deviceName);
@@ -24,13 +25,28 @@ class Device extends SerialPort {
 
     private function _initPins() {
         $this->_pins = array();
-        $capability = $this->query(new Query\Capability());
-        $totalPins = count($capability);
+        $this->_capability = $this->query(new Query\Capability());
+        $totalPins = count($this->_capability);
         for ($i = 0; $i < $totalPins; $i++) {
             $pin = new Device\Pin($i);
             $pin->updateWithQuery($this);
             $this->_pins[] = $pin;
         }
+    }
+    
+    public function getCapability($pin) {
+        if ($pin instanceof Device\Pin) {
+            $pinNumber = $pin->getNumber();
+        } else {
+            $pinNumber = $pin;
+        }
+        
+        if ($pinNumber >= count($this->_capability)) {
+            throw new Exception(
+                    sprintf('specified pin(%d) does not exist', $pin));
+        }
+        
+        return $this->_capability[$pinNumber];
     }
 
     public function digitalWrite($pinNumber, $value) {
