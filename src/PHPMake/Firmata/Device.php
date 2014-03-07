@@ -3,12 +3,14 @@ namespace PHPMake\Firmata;
 use PHPMake\SerialPort;
 use PHPMake\Firmata;
 use PHPMake\Firmata\Query;
+use PHPMake\Firmata\Device;
 
 class Device extends SerialPort {
     private $_savedVTime;
     private $_savedVMin;
     protected $_firmware;
     protected $_version;
+    protected $_pins;
 
     public function __construct($deviceName, $baudRate=57600) {
         parent::__construct($deviceName);
@@ -17,8 +19,83 @@ class Device extends SerialPort {
                 ->setVTime(1)
                 ->setVMin(0);
         $this->_prepare();
+        $this->_initPins();
     }
 
+    private function _initPins() {
+        $this->_pins = array();
+        $capability = $this->query(new Query\Capability());
+        $totalPins = count($capability);
+        for ($i = 0; $i < $totalPins; $i++) {
+            $pin = new Device\Pin($i);
+            $pin->updateWithQuery($this);
+            $this->_pins[] = $pin;
+        }
+    }
+
+    public function digitalWrite($pinNumber, $value) {
+        $value = $value ? 1 : 0;
+        $portNumber = self::portNumberForPin($pinNumber);
+        $command = 0x90 + $portNumber;
+        $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);
+        $secondByte = $this->_makeSecondByteForDigitalWrite($pinNumber, $value);
+        //printf("firstByte:0b%08b, secondByte:0b%08b\n", $firstByte, $secondByte);
+        $this->write(pack('CCC', $command, $firstByte, $secondByte));
+        $this->_updatePinStateInPort($portNumber);
+    }
+    
+    public function _makeFirstByteForDigitalWrite($pinNumber, $value) {
+        $currentFirstByteState = 0;
+        $pinLocationInPort = self::pinLocationInPort($pinNumber);
+        $portNumber = self::portNumberForPin($pinNumber);
+        $firstPinNumberInPort = $portNumber * 8;
+        $limit = 7;
+        for ($currentPinNumber = $firstPinNumberInPort, $i = 0; $i <= $limit; $currentPinNumber++, $i++) {
+            if ($pinNumber == $currentPinNumber) {
+                $pinDigitalState = 0;
+            } else {
+                $pinDigitalState 
+                        = $this->_pins[$currentPinNumber]->getState() ? 1 : 0;
+            }
+            
+            $currentFirstByteState |= $pinDigitalState<<$i;
+        }
+        
+        return (($value << $pinLocationInPort) | $currentFirstByteState) & 0x7F;
+    }
+    
+    public function _makeSecondByteForDigitalWrite($pinNumber, $value) {
+        $currentSecondByteState = 0;
+        $portNumber = self::portNumberForPin($pinNumber);
+        $firstPinNumberInPort = (($portNumber + 1) * 8) - 1;
+        
+        if ($pinNumber == $firstPinNumberInPort) {
+            $pinDigitalState = 0;
+        } else {
+            $pinDigitalState 
+                    = $this->_pins[$firstPinNumberInPort]->getState() ? 1 : 0;
+        }
+        
+        $currentSecondByteState |= $pinDigitalState;
+        return (($value) | $currentSecondByteState) & 0x01;
+    }
+    
+    private function _updatePinStateInPort($portNumber) {
+        $firstPinNumberInPort = $portNumber * 8;
+        $limit = 8;
+        for ($currentPinNumber = $firstPinNumberInPort, $i = 0; $i < $limit; $i++, $currentPinNumber++) {
+            $this->_pins[$currentPinNumber]->updateWithQuery($this);
+        }
+    }
+    
+    public static function pinLocationInPort($pinNumber) {
+        return $pinNumber%8;
+    }
+    
+    public static function portNumberForPin($pinNumber) {
+        return floor($pinNumber/8);
+    }
+    
     public function query(Query $query) {
         $query->request($this);
         return $query->receive($this);

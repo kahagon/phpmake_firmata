@@ -7,7 +7,7 @@ use PHPMake\Firmata\Query\AbstractQuery;
 class PinState extends AbstractQuery {
     private $_pin;
 
-    public function __construct($pin) {
+    public function __construct(Device\Pin $pin) {
         $this->_pin = $pin;
     }
     
@@ -15,7 +15,7 @@ class PinState extends AbstractQuery {
         $device->write(pack('CCCC',
             Firmata::SYSEX_START,
             Firmata::QUERY_PIN_STATE,
-            $this->_pin,
+            $this->_pin->getNumber(),
             Firmata::SYSEX_END));
     }
 
@@ -31,7 +31,7 @@ class PinState extends AbstractQuery {
             throw new Exception(
                     sprintf('specified pin(%d) does not exist', $pin));
         }
-        
+        $this->_pin->updateMode($mode);
         $state7bitByteArray = array();
         for (;;) { 
             $byte = $device->getc();
@@ -49,7 +49,7 @@ class PinState extends AbstractQuery {
             $byte = $state7bitByteArray[$i];
             $pinState |= ($byte&0x7F)<<(8*$i);
         }
-        
-        return $pinState;
+        $this->_pin->updateState($pinState);
+        return $this->_pin;
     }
 }
