@@ -12,7 +12,7 @@ class PinCapability {
         Firmata::I2C => 0,
     );
 
-    public function setCapability($code, $resolution) {
+    public function setResolution($code, $resolution) {
         if (!array_key_exists($code, $this->_capability)) {
             throw new Exception(sprintf('Unknown capability(%d) specified', $code));
         }
@@ -20,12 +20,60 @@ class PinCapability {
         $this->_capability[$code] = $resolution;
     }
 
-    public function getCapability($code) {
+    public function getResolution($code) {
         if (!array_key_exists($code, $this->_capability)) {
             throw new Exception(sprintf('Unknown capability(%d) specified', $code));
         }
 
         return $this->_capability[$code];
+    }
+    
+    public function setResolutionInput($resolution) {
+        $this->setResolution(Firmata::INPUT, $resolution);
+    }
+    
+    public function getResolutionInput() {
+        return $this->getResolution(Firmata::INPUT);
+    }
+    
+    public function setResolutionOutput($resolution) {
+        $this->setResolution(Firmata::OUTPUT, $resolution);
+    }
+
+    public function getResolutionOutput() {
+        return $this->getResolution(Firmata::OUTPUT);
+    }
+
+    public function setResolutionAnalog($resolution) {
+        $this->setResolution(Firmata::ANALOG, $resolution);
+    }
+
+    public function getResolutionAnalog() {
+        return $this->getResolution(Firmata::ANALOG);
+    }
+    
+    public function setResolutionPWM($resolution) {
+        $this->setResolution(Firmata::PWM, $resolution);
+    }
+
+    public function getResolutionPWM() {
+        return $this->getResolution(Firmata::PWM);
+    }
+    
+    public function setResolutionServo($resolution) {
+        $this->setResolution(Firmata::SERVO, $resolution);
+    }
+    
+    public function getResolutionServo() {
+        return $this->getResolution(Firmata::SERVO);
+    }
+    
+    public function setResolutionI2C($resolution) {
+        $this->setResolution(Firmata::I2C, $resolution);
+    }
+    
+    public function getResolutionI2C() {
+        return $this->getResolution(Firmata::I2C);
     }
 
     public function isSupported($code) {

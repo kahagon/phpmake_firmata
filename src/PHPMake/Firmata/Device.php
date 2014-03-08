@@ -29,6 +29,7 @@ class Device extends SerialPort {
         $totalPins = count($this->_capability);
         for ($i = 0; $i < $totalPins; $i++) {
             $pin = new Device\Pin($i);
+            $pin->setCapability($this);
             $pin->updateWithQuery($this);
             $this->_pins[] = $pin;
         }

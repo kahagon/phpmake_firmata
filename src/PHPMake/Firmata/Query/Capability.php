@@ -31,8 +31,9 @@ class Capability extends AbstractQuery {
                     $endOfSysExData = true;
                     break;
                 }
-                $resolution = $device->getc();
-                $pinCapability->setCapability($code, $resolution);
+                $exponentOf2ForResolution = $device->getc();
+                $resolution = pow(2, $exponentOf2ForResolution);
+                $pinCapability->setResolution($code, $resolution);
             }
             
             if ($endOfSysExData) {

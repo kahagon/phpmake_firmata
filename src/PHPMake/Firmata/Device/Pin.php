@@ -12,6 +12,7 @@ class Pin {
     private $_number;
     private $_state;
     private $_mode;
+    private $_capability;
     
     public function __construct($number) {
         $this->_number = $number;
@@ -27,6 +28,14 @@ class Pin {
     
     public function getMode() {
         return $this->_mode;
+    }
+    
+    public function setCapability(Device $device) {
+        $this->_capability = $device->getCapability($this);
+    }
+    
+    public function getCapability() {
+        return $this->_capability;
     }
     
     public function updateState($state) {
