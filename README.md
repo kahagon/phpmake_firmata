@@ -24,10 +24,12 @@ $device = new PHPMake\Firmata\Device('/dev/ttyACM0');
 /* for Windows */
 // $device = new PHPMake\Firmata\Device('COM3');
 
+$pin13 = 13;
+
 for ($i = 0; $i < 3; ++$i) {
-  $device->digitalWrite(13, 1); // light
+  $device->digitalWrite($pin13, PHPMake\Firmata::HIGH); // light
   sleep(1);
-  $device->digitalWrite(13, 0); // unlight
+  $device->digitalWrite($pin13, PHPMake\Firmata::LOW); // unlight
   sleep(1);
 }
 ```
