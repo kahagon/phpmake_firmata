@@ -1,11 +1,10 @@
 <?php
 namespace PHPMake\Firmata;
-use PHPMake\SerialPort;
 use PHPMake\Firmata;
 use PHPMake\Firmata\Query;
 use PHPMake\Firmata\Device;
 
-class Device extends SerialPort {
+class Device extends \PHPMake\SerialPort {
     private $_savedVTime;
     private $_savedVMin;
     protected $_firmware;
@@ -44,14 +43,23 @@ class Device extends SerialPort {
         
         if ($pinNumber >= count($this->_capability)) {
             throw new Exception(
-                    sprintf('specified pin(%d) does not exist', $pin));
+                    sprintf('specified pin(%d) does not exist', $pinNumber));
         }
         
         return $this->_capability[$pinNumber];
     }
+    
+    public function getPin($pinNumber) {
+        if ($pinNumber >= count($this->_pins)) {
+            throw new Exception(
+                    sprintf('specified pin(%d) does not exist', $pinNumber));
+        }
+        
+        return $this->_pins[$pinNumber];
+    }
 
     public function digitalWrite($pinNumber, $value) {
-        $value = $value ? 1 : 0;
+        $value = $value ? Firmata::HIGH : Firmata::LOW;
         $portNumber = self::portNumberForPin($pinNumber);
         $command = 0x90 + $portNumber;
         $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);

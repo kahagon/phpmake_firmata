@@ -3,6 +3,9 @@ namespace PHPMake;
 
 class Firmata {
     
+    const HIGH = 1;
+    const LOW = 0;
+    
     const SYSEX_START = 0xF0;
     const SYSEX_END = 0xF7;
     const QUERY_FIRMWARE = 0x79;
