@@ -5,7 +5,7 @@ PHPMake\Firmata is a PHP interface to communicate with Firmata devices.
 See http://firmata.org/ to get more information about Firmata.
 
 
-Prerequisites
+Dependencies
 =============
 
 PHPMake\Firmata is based on PHPMake\SerialPort extension.  
