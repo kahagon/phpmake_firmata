@@ -6,6 +6,11 @@ class Firmata {
     const HIGH = 1;
     const LOW = 0;
     
+    const MESSAGE_ANALOG = 0xE0;
+    const MESSAGE_DIGITAL = 0x90;
+    const REPORT_ANALOG = 0xC0;
+    const REPORT_DIGITAL = 0xD0;
+    
     const SYSEX_START = 0xF0;
     const SYSEX_END = 0xF7;
     const QUERY_FIRMWARE = 0x79;

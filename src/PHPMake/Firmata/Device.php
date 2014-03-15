@@ -11,6 +11,8 @@ class Device extends \PHPMake\SerialPort {
     protected $_version;
     protected $_pins;
     protected $_capability;
+    protected $_bufferAnalogIn;
+    protected $_bufferNotAnalogIn;
 
     public function __construct($deviceName, $baudRate=57600) {
         parent::__construct($deviceName);
@@ -42,7 +44,7 @@ class Device extends \PHPMake\SerialPort {
         }
         
         if ($pinNumber >= count($this->_capability)) {
-            throw new Exception(
+            throw new Device\Exception(
                     sprintf('specified pin(%d) does not exist', $pinNumber));
         }
         
@@ -51,17 +53,17 @@ class Device extends \PHPMake\SerialPort {
     
     public function getPin($pinNumber) {
         if ($pinNumber >= count($this->_pins)) {
-            throw new Exception(
+            throw new Device\Exception(
                     sprintf('specified pin(%d) does not exist', $pinNumber));
         }
         
         return $this->_pins[$pinNumber];
     }
-
+    
     public function digitalWrite($pinNumber, $value) {
         $value = $value ? Firmata::HIGH : Firmata::LOW;
         $portNumber = self::portNumberForPin($pinNumber);
-        $command = 0x90 + $portNumber;
+        $command = Firmata::MESSAGE_DIGITAL | $portNumber;
         $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);
         $secondByte = $this->_makeSecondByteForDigitalWrite($pinNumber, $value);
         //printf("firstByte:0b%08b, secondByte:0b%08b\n", $firstByte, $secondByte);
@@ -139,9 +141,25 @@ class Device extends \PHPMake\SerialPort {
         return $_d[1];
     }
     
+    public function receive7bitBytesData($length) {
+        if (($length%2) != 0) {
+            throw new Exception(sprintf(
+                    '$length(%d) is invalid. the argument must be multiple of 2.', 
+                    $length));
+        }
+        
+        $data7bitByteArray = array();
+        for ($i = 0; $i < $length; $i++) {
+            $d=$this->read(1);
+            $_d = unpack('C', $d);
+            $data7bitByteArray[] = $_d[1];
+        }
+        
+        return self::dataWith7bitBytesArray($data7bitByteArray);
+    }
+    
     public function receiveSysEx7bitBytesData() {
         $data7bitByteArray = array();
-        $data = '';
         while ($d=$this->read(1)) {
             $_d = unpack('C', $d);
             if (Firmata::SYSEX_END==$_d[1]) {
@@ -149,7 +167,12 @@ class Device extends \PHPMake\SerialPort {
             }
             $data7bitByteArray[] = $_d[1];
         }
-
+        
+        return self::dataWith7bitBytesArray($data7bitByteArray);
+    }
+    
+    public static function dataWith7bitBytesArray(array $data7bitByteArray) {
+        $data = '';
         $length = count($data7bitByteArray);
         for ($i=0; $i<$length-1; $i+=2) {
             $firstValue = $data7bitByteArray[$i] & 0x7F;
