@@ -1,19 +1,18 @@
 <?php
 namespace PHPMake\Firmata\Query;
-use PHPMake\Firmata\Device;
-use PHPMake\Firmata\Query;
+use PHPMake\Firmata;
 
-abstract class AbstractQuery implements Query {
+abstract class AbstractQuery implements Firmata\Query {
     private $_savedVTime;
     private $_savedVMin;
 
-    protected function _saveVTimeVMin(Device $device) {
-        $this->_savedVTime = $device->getVTime();
-        $this->_savedVMin = $device->getVMin();
+    protected function _saveVTimeVMin(Firmata\Stream $stream) {
+        $this->_savedVTime = $stream->getVTime();
+        $this->_savedVMin = $stream->getVMin();
     }
 
-    protected function _restoreVTimeVMin(Device $device) {
-        $device->setVTime($this->_savedVTime)
+    protected function _restoreVTimeVMin(Firmata\Stream $stream) {
+        $stream->setVTime($this->_savedVTime)
                 ->setVMin($this->_savedVMin);
     }
 }

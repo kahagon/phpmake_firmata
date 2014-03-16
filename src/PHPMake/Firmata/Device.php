@@ -4,9 +4,10 @@ use PHPMake\Firmata;
 use PHPMake\Firmata\Query;
 use PHPMake\Firmata\Device;
 
-class Device extends \PHPMake\SerialPort {
+class Device {
     private $_savedVTime;
     private $_savedVMin;
+    private $_stream;
     protected $_firmware;
     protected $_version;
     protected $_pins;
@@ -15,11 +16,7 @@ class Device extends \PHPMake\SerialPort {
     protected $_bufferNotAnalogIn;
 
     public function __construct($deviceName, $baudRate=57600) {
-        parent::__construct($deviceName);
-        $this->setBaudRate($baudRate)
-                ->setCanonical(false)
-                ->setVTime(1)
-                ->setVMin(0);
+        $this->_stream = new Firmata\Stream($deviceName, $baudRate);
         $this->_prepare();
         $this->_initPins();
     }
@@ -67,7 +64,7 @@ class Device extends \PHPMake\SerialPort {
         $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);
         $secondByte = $this->_makeSecondByteForDigitalWrite($pinNumber, $value);
         //printf("firstByte:0b%08b, secondByte:0b%08b\n", $firstByte, $secondByte);
-        $this->write(pack('CCC', $command, $firstByte, $secondByte));
+        $this->_stream->write(pack('CCC', $command, $firstByte, $secondByte));
         $this->_updatePinStateInPort($portNumber);
     }
     
@@ -124,8 +121,11 @@ class Device extends \PHPMake\SerialPort {
     }
     
     public function query(Query $query) {
-        $query->request($this);
-        return $query->receive($this);
+        $this->_stream->preprocess();
+        $query->request($this->_stream);
+        $ret = $query->receive($this->_stream);
+        $this->_stream->postprocess();
+        return $ret;
     }
 
     public function getFirmware() {
@@ -134,54 +134,6 @@ class Device extends \PHPMake\SerialPort {
 
     public function getVersion() {
         return $this->_version;
-    }
-
-    public function getc() {
-        $_d = unpack('C', $this->read(1));
-        return $_d[1];
-    }
-    
-    public function receive7bitBytesData($length) {
-        if (($length%2) != 0) {
-            throw new Exception(sprintf(
-                    '$length(%d) is invalid. the argument must be multiple of 2.', 
-                    $length));
-        }
-        
-        $data7bitByteArray = array();
-        for ($i = 0; $i < $length; $i++) {
-            $d=$this->read(1);
-            $_d = unpack('C', $d);
-            $data7bitByteArray[] = $_d[1];
-        }
-        
-        return self::dataWith7bitBytesArray($data7bitByteArray);
-    }
-    
-    public function receiveSysEx7bitBytesData() {
-        $data7bitByteArray = array();
-        while ($d=$this->read(1)) {
-            $_d = unpack('C', $d);
-            if (Firmata::SYSEX_END==$_d[1]) {
-                break;
-            }
-            $data7bitByteArray[] = $_d[1];
-        }
-        
-        return self::dataWith7bitBytesArray($data7bitByteArray);
-    }
-    
-    public static function dataWith7bitBytesArray(array $data7bitByteArray) {
-        $data = '';
-        $length = count($data7bitByteArray);
-        for ($i=0; $i<$length-1; $i+=2) {
-            $firstValue = $data7bitByteArray[$i] & 0x7F;
-            $secondValue = ($data7bitByteArray[$i+1] & 0x7F)<<7;
-
-            $data .= pack('C', $firstValue|$secondValue);
-        }
-
-        return $data;
     }
 
     /**
@@ -237,9 +189,14 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _prepare() {
-        $versionQuery = new Query\Version(); 
-        $this->_version = $versionQuery->receive($this);
+        $this->_stream->preprocess();
+        $versionQuery = new Query\Version();
+        $this->_version = $versionQuery->receive($this->_stream);
+        //$this->_stream->postprocess();
+        
+        $this->_stream->preprocess();
         $firmwareQuery = new Query\Firmware(); 
-        $this->_firmware = $firmwareQuery->receive($this);
+        $this->_firmware = $firmwareQuery->receive($this->_stream);
+        //$this->_stream->postprocess();
     }
 }

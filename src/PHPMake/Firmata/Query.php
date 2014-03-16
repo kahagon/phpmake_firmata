@@ -1,10 +1,10 @@
 <?php
 namespace PHPMake\Firmata;
-use PHPMake\Firmata\Device;
+use PHPMake\Firmata;
 
 interface Query {
 
-    public function request(Device $device);
+    public function request(Firmata\Stream $stream);
 
-    public function receive(Device $device);
+    public function receive(Firmata\Stream $stream);
 }

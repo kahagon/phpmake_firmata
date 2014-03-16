@@ -6,23 +6,29 @@ use PHPMake\Firmata\Query\AbstractQuery;
 
 class Firmware extends AbstractQuery {
     
-    public function request(Device $device) {
-        $device->write(pack('CCC', 
+    public function request(Firmata\Stream $stream) {
+        $stream->write(pack('CCC', 
                 Firmata::SYSEX_START, 
                 Firmata::QUERY_FIRMWARE, 
                 Firmata::SYSEX_END));
     }
 
-    public function receive(Device $device) {
-        $this->_saveVTimeVMin($device);
+    public function receive(Firmata\Stream $stream) {
+        print __METHOD__ . PHP_EOL;
+        $this->_saveVTimeVMin($stream);
 
-        $device->setVTime(0)->setVMin(1);
-        $device->getc(); // Firmata::SYSEX_START
-        $device->getc(); // Firmata::QUERY_FIRMWARE
-        $majorVersionString = $device->getc();
-        $minorVersionString = $device->getc();
-        $firmwareName = $device->receiveSysEx7bitBytesData();
-        $this->_restoreVTimeVMin($device);
+        $stream->setVTime(0)->setVMin(1);
+        $c = $stream->getc(); // Firmata::SYSEX_START
+        printf("Firmata::SYSEX_START 0x%02X\n", $c);
+        $c = $stream->getc(); // Firmata::QUERY_FIRMWARE
+        printf("Firmata::QUERY_FIRMWARE 0x%02X\n", $c);
+        $majorVersionString = $stream->getc();
+        printf("majorVersionString %s\n", $majorVersionString);
+        $minorVersionString = $stream->getc();
+        printf("minorVersionString %s\n", $minorVersionString);
+        $firmwareName = $stream->receiveSysEx7bitBytesData();
+        printf("firmwareName:%s\n", $firmwareName);
+        $this->_restoreVTimeVMin($stream);
     
         $firmware = (object)array(
             'name' => $firmwareName,

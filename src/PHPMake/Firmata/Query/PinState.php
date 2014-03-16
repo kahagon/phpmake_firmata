@@ -11,22 +11,22 @@ class PinState extends AbstractQuery {
         $this->_pin = $pin;
     }
     
-    public function request(Device $device) {
-        $device->write(pack('CCCC',
+    public function request(Firmata\Stream $stream) {
+        $stream->write(pack('CCCC',
             Firmata::SYSEX_START,
             Firmata::QUERY_PIN_STATE,
             $this->_pin->getNumber(),
             Firmata::SYSEX_END));
     }
 
-    public function receive(Device $device) {
-        $this->_saveVTimeVMin($device);
+    public function receive(Firmata\Stream $stream) {
+        $this->_saveVTimeVMin($stream);
 
-        $device->setVTime(0)->setVMin(1);
-        $device->getc(); // Firmata::SYSEX_START
-        $device->getc(); // Firmata::RESPONSE_PIN_STATE
-        $pin = $device->getc();
-        $mode = $device->getc();
+        $stream->setVTime(0)->setVMin(1);
+        $stream->getc(); // Firmata::SYSEX_START
+        $stream->getc(); // Firmata::RESPONSE_PIN_STATE
+        $pin = $stream->getc();
+        $mode = $stream->getc();
         if ($mode == Firmata::SYSEX_END) {
             throw new Exception(
                     sprintf('specified pin(%d) does not exist', $pin));
@@ -34,14 +34,14 @@ class PinState extends AbstractQuery {
         $this->_pin->updateMode($mode);
         $state7bitByteArray = array();
         for (;;) { 
-            $byte = $device->getc();
+            $byte = $stream->getc();
             if ($byte == Firmata::SYSEX_END) {
                 break;
             }
             
             $state7bitByteArray[] = $byte;
         }
-        $this->_restoreVTimeVMin($device);
+        $this->_restoreVTimeVMin($stream);
 
         $pinState = 0;
         $byteArrayLength = count($state7bitByteArray);
