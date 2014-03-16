@@ -107,7 +107,11 @@ class Device {
     private function _updatePinStateInPort($portNumber) {
         $firstPinNumberInPort = $portNumber * 8;
         $limit = 8;
-        for ($currentPinNumber = $firstPinNumberInPort, $i = 0; $i < $limit; $i++, $currentPinNumber++) {
+        for (
+                $currentPinNumber = $firstPinNumberInPort, $i = 0; 
+                $i < $limit; 
+                $i++, $currentPinNumber++) 
+        {
             $this->_pins[$currentPinNumber]->updateWithQuery($this);
         }
     }
@@ -134,48 +138,6 @@ class Device {
 
     public function getVersion() {
         return $this->_version;
-    }
-
-    /**
-     * Wait for data sequence to arrive.
-     *
-     * @param int[] $byteArray array of unsigned chars
-     * @return string received binary data
-     */
-    public function waitData(array $byteArray) {
-        $data = '';
-        $this->_saveVTimeVMin();
-        $this->setVTime(0)->setVMin(1);
-        $length = count($byteArray);
-        $index = 0;
-        while (true) {
-            $d = $this->read(1);
-            if (!$d) continue;
-
-            $data .= $d;
-            $u = unpack('C', $data);
-            $t = $u[1];
-            if ($t == $byteArray[$index]) {
-                if ($index == $length-1) {
-                    break;
-                } else {
-                    ++$index;
-                }
-            } else {
-                $index = 0; // reset
-            }
-        }
-        $this->_restoreVTimeVMin();
-        return $data;
-    }
-
-
-    function voidBuffer() {
-        $this->_saveVTimeVMin();
-        $this->setVTime(1)->setVMin(0);
-        while ($r=$this->read(1024))
-            ;
-        $this->_restoreVTimeVMin();
     }
 
     function _saveVTimeVMin() {
