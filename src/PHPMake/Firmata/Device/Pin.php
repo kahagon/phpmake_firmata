@@ -30,8 +30,12 @@ class Pin {
         return $this->_mode;
     }
     
-    public function setCapability(Device $device) {
-        $this->_capability = $device->getCapability($this);
+    public function setMode(Device $device, $mode) {
+        $device->setPinMode($this, $mode);
+    }
+    
+    public function setCapability(Device\PinCapability $pinCapability) {
+        $this->_capability = $pinCapability;
     }
     
     public function getCapability() {
@@ -44,10 +48,5 @@ class Pin {
     
     public function updateMode($mode) {
         $this->_mode = $mode;
-    }
-    
-    public function updateWithQuery(Device $device) {
-        $pinStateQuery = new Query\PinState($this);
-        $device->query($pinStateQuery);
     }
 }

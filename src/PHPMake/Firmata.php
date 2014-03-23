@@ -2,6 +2,20 @@
 namespace PHPMake;
 
 class Firmata {
+    private static $_logger;
+    
+    public static function setLogger(\Psr\Log\LoggerInterface $logger) {
+        self::$_logger = $logger;
+    }
+    
+    public static function getLogger() {
+        if (!self::$_logger) {
+            self::$_logger = new \PHPMake\Logger();
+            self::$_logger->setThreshold(\Psr\Log\LogLevel::ERROR);
+        }
+        
+        return self::$_logger;
+    }
     
     const HIGH = 1;
     const LOW = 0;
@@ -18,7 +32,9 @@ class Firmata {
     const QUERY_CAPABILITY = 0x6B;
     const RESPONSE_CAPABILITY = 0x6C;
     const QUERY_PIN_STATE = 0x6D;
-    const RESPONCE_PIN_STATE = 0x6E;
+    const RESPONSE_PIN_STATE = 0x6E;
+    
+    const SET_PIN_MODE = 0xF4;
 
     const INPUT = 0x00;
     const OUTPUT = 0x01;
