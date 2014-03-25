@@ -44,4 +44,6 @@ class Firmata {
     const SHIFT = 0x05;
     const I2C = 0x06;
     
+    const ANY_BYTE = '*';
+    
 }

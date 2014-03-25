@@ -7,6 +7,8 @@ class Device extends \PHPMake\SerialPort {
     private $_state = self::STATE_SETUP;
     private $_putbackBuffer = array();
     private $_logger;
+    private $_loop = false;
+    private $_noop = true;
     protected $_firmware;
     protected $_version;
     protected $_pins;
@@ -19,31 +21,58 @@ class Device extends \PHPMake\SerialPort {
         $this->_logger = Firmata::getLogger();
         $this->setBaudRate($baudRate)
                 ->setCanonical(false)
-                ->setVTime(0)
-                ->setVMin(1);
+                ->setVTime(0)->setVMin(1); // never modify
         $this->_setup();
         $this->_initPins();
     }
     
-    private function _setup() {
-        while ($c = $this->_getc()) {
-            if ($c == Firmata::REPORT_VERSION) {
-                break;
+    public function waitData(array $byteArray) {
+        $buffer = array();
+        $length = count($byteArray);
+        $index = 0;
+        while (true) {
+            $t = $this->_getc();
+            $c = $byteArray[$index];
+            $this->_logger->debug(sprintf('$t: %s, $c: %s'.PHP_EOL, $t, $c));
+            if ($c == Firmata::ANY_BYTE || $t == $c) {
+                $this->_logger->debug('match' . PHP_EOL);
+                $buffer[] = $t;
+                if ($index == $length-1) {
+                    break;
+                } else {
+                    ++$index;
+                }
+            } else {
+                $this->_logger->debug('reset' . PHP_EOL);
+                $index = 0; // reset
+                unset($buffer);
+                $buffer = array();
             }
         }
-
-        $majorVersion = $this->_getc();
-        $minorVersion = $this->_getc();
+        
+        return $buffer;
+    }
+    
+    private function _setup() {
+        $buffer = $this->waitData(array(
+            Firmata::REPORT_VERSION,
+            Firmata::ANY_BYTE,
+            Firmata::ANY_BYTE,
+            Firmata::SYSEX_START,
+            Firmata::QUERY_FIRMWARE,
+        ));
+        
+        array_shift($buffer);
+        $majorVersion = array_shift($buffer);
+        $minorVersion = array_shift($buffer);
         $this->_version = (object)array(
             'major' => (int)$majorVersion,
             'minor' => (int)$minorVersion);
         
-        $this->_getc(); // Firmata::SYSEX_START
-        $this->_getc(); // Firmata::QUERY_FIRMWARE
+        array_shift($buffer); // Firmata::SYSEX_START
+        array_shift($buffer); // Firmata::QUERY_FIRMWARE
         $this->_getc(); // equal to $majorVersion
         $this->_getc(); // equal to $minorVersion
-//        while (($c=$this->_getc()) != Firmata::SYSEX_END) 
-//                ;
         
         $firmwareName = $this->receiveSysEx7bitBytesData();
         $this->_firmware = (object)array(
@@ -236,13 +265,13 @@ class Device extends \PHPMake\SerialPort {
                 break;
             default:
                 throw new Exception(sprintf(
-                        'unknown command(%s) detected', $c));
+                        'unknown command(0x%02X) detected', $c));
         }
         
         $this->_state = self::STATE_READ_ANALOG;
     }
     
-    public function setDigitalPortObserver(Firmata\DigitalPortObserver $observer) {
+    public function setDigitalPortObserver(Device\DigitalPortObserver $observer) {
         $this->_digitalPortObserver = $observer;
     }
     
@@ -294,6 +323,7 @@ class Device extends \PHPMake\SerialPort {
     
     private function _eval() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_noop = false;
         $recursion = true;
         switch ($this->_state) {
             case self::STATE_CHECK_DIGITAL:
@@ -339,6 +369,28 @@ class Device extends \PHPMake\SerialPort {
     
     private function _putback($c) {
         array_unshift($this->_putbackBuffer, $c);
+    }
+    
+    public function stopLoop() {
+        $this->_loop = false;
+    }
+    
+    public function startLoop(Device\LoopDelegate $delegate) {
+        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_loop = true;
+        $interval = $delegate->getInterval();
+        while ($this->_loop) {
+            $delegate->loop($this);
+            if ($this->_noop) {
+                $this->_noop();
+            }
+            $this->_noop = true;
+            usleep($interval);
+        }
+    }
+    
+    private function _noop() {
+        $this->queryVersion();
     }
     
     private function _initCapability() {

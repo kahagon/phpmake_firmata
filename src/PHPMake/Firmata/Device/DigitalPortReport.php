@@ -1,5 +1,6 @@
 <?php
-namespace PHPMake\Firmata;
+namespace PHPMake\Firmata\Device;
+use PHPMake\Firmata\Device;
 
 /**
  *
