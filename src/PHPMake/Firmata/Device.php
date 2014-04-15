@@ -301,7 +301,7 @@ class Device extends \PHPMake\SerialPort {
     private function _getDigitalPortReport($portNumber) {
         if (!array_key_exists($portNumber, $this->_digitalPortReportArray)) {
             $this->_digitalPortReportArray[$portNumber]
-                    = new Firmata\DigitalPortReport($portNumber);
+                    = new Device\DigitalPortReport($portNumber);
         }
         
         return $this->_digitalPortReportArray[$portNumber];
@@ -500,19 +500,16 @@ class Device extends \PHPMake\SerialPort {
     }
     
     public function _makeSecondByteForDigitalWrite($pinNumber, $value) {
-        $currentSecondByteState = 0;
         $portNumber = self::portNumberForPin($pinNumber);
         $firstPinNumberInPort = (($portNumber + 1) * 8) - 1;
+        $currentSecondByteState
+                    = $this->_pins[$firstPinNumberInPort]->getState() ? 1 : 0;
         
         if ($pinNumber == $firstPinNumberInPort) {
-            $pinDigitalState = 0;
-        } else {
-            $pinDigitalState 
-                    = $this->_pins[$firstPinNumberInPort]->getState() ? 1 : 0;
+            $currentSecondByteState = $value;
         }
         
-        $currentSecondByteState |= $pinDigitalState;
-        return (($value) | $currentSecondByteState) & 0x01;
+        return $currentSecondByteState;
     }
     
     private function _updatePinStateInPort($portNumber) {
