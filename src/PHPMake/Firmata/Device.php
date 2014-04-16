@@ -371,26 +371,30 @@ class Device extends \PHPMake\SerialPort {
         array_unshift($this->_putbackBuffer, $c);
     }
     
-    public function stopLoop() {
+    public function stop() {
         $this->_loop = false;
     }
     
-    public function startLoop(Device\LoopDelegate $delegate) {
+    public function run(Device\LoopDelegate $delegate) {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $this->_loop = true;
         $interval = $delegate->getInterval();
         while ($this->_loop) {
-            $delegate->loop($this);
-            if ($this->_noop) {
-                $this->_noop();
-            }
-            $this->_noop = true;
+            $delegate->tick($this);
+            $this->noop();
             usleep($interval);
         }
     }
     
-    private function _noop() {
+    private function _drain() {
         $this->queryVersion();
+    }
+
+    public function noop() {
+        if ($this->_noop) {
+            $this->_drain();
+        }
+        $this->_noop = true;
     }
     
     private function _initCapability() {
@@ -474,9 +478,10 @@ class Device extends \PHPMake\SerialPort {
         $command = Firmata::MESSAGE_DIGITAL | $portNumber;
         $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);
         $secondByte = $this->_makeSecondByteForDigitalWrite($pinNumber, $value);
-        //printf("firstByte:0b%08b, secondByte:0b%08b\n", $firstByte, $secondByte);
         $this->write(pack('CCC', $command, $firstByte, $secondByte));
-        $this->_updatePinStateInPort($portNumber);
+        //$this->updatePin($pinNumber);
+        $this->_pins[$pinNumber]->updateState($value?1:0);
+        $this->_drain();
     }
     
     public function _makeFirstByteForDigitalWrite($pinNumber, $value) {
@@ -487,7 +492,7 @@ class Device extends \PHPMake\SerialPort {
         $limit = 7;
         for ($currentPinNumber = $firstPinNumberInPort, $i = 0; $i <= $limit; $currentPinNumber++, $i++) {
             if ($pinNumber == $currentPinNumber) {
-                $pinDigitalState = 0;
+                $pinDigitalState = $value ? 1 : 0;
             } else {
                 $pinDigitalState 
                         = $this->_pins[$currentPinNumber]->getState() ? 1 : 0;
@@ -496,7 +501,7 @@ class Device extends \PHPMake\SerialPort {
             $currentFirstByteState |= $pinDigitalState<<$i;
         }
         
-        return (($value << $pinLocationInPort) | $currentFirstByteState) & 0x7F;
+        return ($currentFirstByteState) & 0x7F;
     }
     
     public function _makeSecondByteForDigitalWrite($pinNumber, $value) {
@@ -505,8 +510,8 @@ class Device extends \PHPMake\SerialPort {
         $currentSecondByteState
                     = $this->_pins[$firstPinNumberInPort]->getState() ? 1 : 0;
         
-        if ($pinNumber == $firstPinNumberInPort) {
-            $currentSecondByteState = $value;
+        if (($pinNumber%8)==7) {
+            $currentSecondByteState = $value ? 1 : 0;
         }
         
         return $currentSecondByteState;
