@@ -292,7 +292,7 @@ class Device extends \PHPMake\SerialPort {
             $report = $this->_getDigitalPortReport($portNumber);
             $changed = $report->setValue($lsb, $msb);
             foreach ($changed as $pinNumber => $state) {
-                $this->_digitalPortObserver->notify($this, $pinNumber, $state);
+                $this->_digitalPortObserver->notify($this, $this->getPin($pinNumber), $state);
             }
         }
     }
@@ -375,7 +375,7 @@ class Device extends \PHPMake\SerialPort {
         $this->_loop = false;
     }
     
-    public function run(Device\LoopDelegate $delegate) {
+    public function run(Firmata\LoopDelegate $delegate) {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $this->_loop = true;
         $interval = $delegate->getInterval();
@@ -468,6 +468,12 @@ class Device extends \PHPMake\SerialPort {
     public function reportDigitalPort($portNumber, $report=true) {
         $command = Firmata::REPORT_DIGITAL | $portNumber;
         $this->write(pack('CC', $command, $report?1:0));
+    }
+
+    public function reportDigitalPin($pin) {
+        $pin = $this->getPin($pin);
+        $this->setPinMode($pin, Firmata::INPUT);
+        $this->reportDigitalPort(Device::portNumberForPin($pin->getNumber()));
     }
     
     public function digitalWrite($pin, $value) {
