@@ -18,11 +18,14 @@ class WebSocketServer {
     }
 
     private function _initLoop() {
+        $component = $this->_component;
+        $device = $this->_device;
+        $tick = function () use ($component, $device) {
+            $component->tick($device);
+            $device->noop();
+        };
         $this->_loop = new \React\EventLoop\StreamSelectLoop();
-        $this->_loop->addPeriodicTimer($this->_component->getInterval()/1000000, function () {
-            $this->_component->tick($this->_device);
-            $this->_device->noop();
-        });
+        $this->_loop->addPeriodicTimer($this->_component->getInterval()/1000000, $tick);
     }
 
     private function _initServer($port, $address) {
