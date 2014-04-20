@@ -444,6 +444,10 @@ class Device extends \PHPMake\SerialPort {
         
         return $pinNumber;
     }
+
+    public function getCapabilities() {
+        return $this->_capability;
+    }
     
     public function getCapability($pin) {
         $pinNumber = $this->_pinNumber($pin);
