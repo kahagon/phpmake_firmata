@@ -10,7 +10,7 @@ class JsonCommandFactory {
             self::$_instance = new JsonCommandFactory();
         }
 
-        $this->_registerCommands();
+        self::$instance->_registerCommands();
         return self::$_instance;
     }
 
@@ -20,17 +20,18 @@ class JsonCommandFactory {
     }
 
     private static function _fqn($className) {
-        return "\\PHPMake\\Firmata\\WebSocket\\Command\\JsonCommand\\${className}";
+        return "\\PHPMake\\Firmata\\WebSocketServer\\JsonCommand\\${className}";
     }
 
-    public function registerCommand($name, $jsonCommandFullyQualifiedName) {
-        $this->_commands[$name] = $commnadInterfaceFullyQualifiedName;
+    public function registerCommand($name, $commandInterfaceFullyQualifiedName) {
+        $this->_commands[$name] = $commandInterfaceFullyQualifiedName;
     }
+
 
     public function getCommand($requiredCommandName) {
         $commandName = $this->_commands[$requiredCommandName];
         if (!$commandName) {
-            throw new \Exception(sprintf("command(%s) not registered\n", $message->command);
+            throw new \Exception(sprintf("command(%s) not registered\n", $message->command));
         }
 
         return new $commandName();

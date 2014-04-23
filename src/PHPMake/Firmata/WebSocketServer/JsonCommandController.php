@@ -1,5 +1,6 @@
 <?php
 namespace PHPMake\Firmata\WebSocketServer;
+use \PHPMake\Firmata;
 class JsonCommandController extends Firmata\WebSocketServer\ConnectionHub {
 
     protected $_tickInterval;
@@ -18,11 +19,16 @@ class JsonCommandController extends Firmata\WebSocketServer\ConnectionHub {
     }
 
     public function onMessage(\Ratchet\ConnectionInterface $connection, $message) {
-        $factory = Command\JsonCommandFactory::getInstance();
+        $factory = JsonCommand\JsonCommandFactory::getInstance();
         try {
             $poCommand = json_decode($message);
             $command = $factory->getCommand($poCommand->command);
-            $command->execute($poCommand->arguments, $connection, $this->getConnections());
+            $command->execute(
+                $poCommand->command,
+                $poCommand->arguments,
+                $this->getDevice(),
+                $connection,
+                $this->getConnections());
         } catch (\Exception $e) {
             print 'exception occurred. ' . $e->getMessage() . PHP_EOL;
         }

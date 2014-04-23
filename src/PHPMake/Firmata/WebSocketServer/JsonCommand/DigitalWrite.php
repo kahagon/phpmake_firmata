@@ -6,6 +6,7 @@ use \PHPMake\Firmata\WebSocketServer\Command\CommandInterface;
 class DigitalWrite implements CommandInterface {
 
     public function execute(
+        $commandName,
         array $arguments,
         Firmata\Device $device,
         \Ratchet\ConnectionInterface $from,

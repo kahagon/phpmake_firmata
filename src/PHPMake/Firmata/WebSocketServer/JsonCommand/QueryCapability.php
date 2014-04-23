@@ -6,6 +6,7 @@ use \PHPMake\Firmata\WebSocketServer\Command\CommandInterface;
 class QueryCapability implements CommandInterface {
 
     public function execute(
+        $commandName,
         array $arguments,
         Firmata\Device $device,
         \Ratchet\ConnectionInterface $from,
@@ -22,7 +23,7 @@ class QueryCapability implements CommandInterface {
             $plainObject->analog = $pinCapability->getResolutionAnalog();
             $plainObject->pwm = $pinCapability->getResolutionPWM();
             $plainObject->servo = $pinCapability->getResolutionServo();
-            $plainObject->i2c = $pinCapability->getResolutionI2C());
+            $plainObject->i2c = $pinCapability->getResolutionI2C();
 
             $pin = $device->getPin($i);
             switch ($device->getPin($i)->getMode()) {
@@ -51,7 +52,7 @@ class QueryCapability implements CommandInterface {
             $capabilities[] = $plainObject;
         }
         $from->send(json_encode((object)array(
-            'command' => $this->_command,
+            'command' => $commandName,
             'data' => $capabilities
         )));
     }
