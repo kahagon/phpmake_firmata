@@ -10,6 +10,7 @@ class JsonCommandFactory {
             self::$_instance = new JsonCommandFactory();
         }
 
+        $this->_registerCommands();
         return self::$_instance;
     }
 
