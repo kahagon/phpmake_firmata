@@ -26,6 +26,8 @@ class QueryCapability implements CommandInterface {
             $plainObject->i2c = $pinCapability->getResolutionI2C();
 
             $pin = $device->getPin($i);
+            $plainObject->currentState = $pin->getState();
+
             switch ($device->getPin($i)->getMode()) {
                 case Firmata::INPUT:
                     $plainObject->currentMode = 'input';
