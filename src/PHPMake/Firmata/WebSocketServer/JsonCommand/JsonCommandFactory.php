@@ -16,6 +16,7 @@ class JsonCommandFactory {
 
     private function _registerCommands() {
         $this->registerCommand('queryCapability', self::_fqn('QueryCapability'));
+        $this->registerCommand('queryPinState', self::_fqn('QueryPinState'));
         $this->registerCommand('digitalWrite', self::_fqn('DigitalWrite'));
     }
 
