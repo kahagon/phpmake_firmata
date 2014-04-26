@@ -1,5 +1,6 @@
 <?php
 namespace PHPMake\Firmata\Device;
+use PHPMake\Firmata;
 use PHPMake\Firmata\Device;
 use PHPMake\Firmata\Query;
 
@@ -17,6 +18,7 @@ class Pin {
 
     public function __construct($number) {
         $this->_number = $number;
+        $this->_inputState = Firmata::LOW;
     }
 
     public function getNumber() {
