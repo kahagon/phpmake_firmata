@@ -1,9 +1,8 @@
 <?php
 namespace PHPMake\Firmata\WebSocketServer\JsonCommand;
 use \PHPMake\Firmata;
-use \PHPMake\Firmata\WebSocketServer\Command\CommandInterface;
 
-class DigitalWrite implements CommandInterface {
+class DigitalWrite extends JsonCommandAdapter {
 
     public function execute(
         $commandName,

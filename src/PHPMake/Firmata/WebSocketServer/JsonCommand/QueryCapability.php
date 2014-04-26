@@ -1,9 +1,8 @@
 <?php
 namespace PHPMake\Firmata\WebSocketServer\JsonCommand;
 use \PHPMake\Firmata;
-use \PHPMake\Firmata\WebSocketServer\Command\CommandInterface;
 
-class QueryCapability implements CommandInterface {
+class QueryCapability extends CommandInterface {
 
     public function execute(
         $commandName,
