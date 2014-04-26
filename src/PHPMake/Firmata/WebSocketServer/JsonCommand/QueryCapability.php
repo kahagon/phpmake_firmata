@@ -2,7 +2,7 @@
 namespace PHPMake\Firmata\WebSocketServer\JsonCommand;
 use \PHPMake\Firmata;
 
-class QueryCapability extends CommandInterface {
+class QueryCapability extends JsonCommandAdapter {
 
     public function execute(
         $commandName,
