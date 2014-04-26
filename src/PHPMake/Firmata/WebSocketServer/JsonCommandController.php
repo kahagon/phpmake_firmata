@@ -19,7 +19,7 @@ class JsonCommandController
                 'command' => 'digitalRead',
                 'signature' => null,
                 'data' => (object)array(
-                    'pin' => $pin,
+                    'pin' => $pin->getNumber(),
                     'state' => $state
                 )
             )));
