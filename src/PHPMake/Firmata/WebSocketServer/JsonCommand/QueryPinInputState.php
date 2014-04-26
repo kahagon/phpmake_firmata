@@ -2,7 +2,7 @@
 namespace PHPMake\Firmata\WebSocketServer\JsonCommand;
 use \PHPMake\Firmata;
 
-class QueryPinState extends JsonCommandAdapter {
+class QueryPinInputState extends JsonCommandAdapter {
 
     public function execute(
         $commandName,
@@ -18,7 +18,7 @@ class QueryPinState extends JsonCommandAdapter {
         $data = (object)array(
             'pin' => $targetPin,
             'mode' => Firmata::modeStringFromCode($pin->getMode()),
-            'state' => $pin->getState()
+            'state' => $pin->getInputState()
         );
         $this->send($from, $commandName, $signature, $data);
     }

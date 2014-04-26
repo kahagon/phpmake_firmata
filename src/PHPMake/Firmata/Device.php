@@ -300,7 +300,9 @@ class Device extends \PHPMake\SerialPort {
         $changed = $report->setValue($lsb, $msb);
         foreach ($this->_digitalPortObservers as $observer) {
             foreach ($changed as $pinNumber => $state) {
-                $observer->notify($this, $this->getPin($pinNumber), $state);
+                $pin = $this->getPin($pinNumber);
+                $pin->setInputState($state);
+                $observer->notify($this, $pin, $state);
             }
         }
     }
