@@ -1,12 +1,12 @@
 <?php
 namespace PHPMake\Firmata\WebSocketServer\JsonCommand;
 use \PHPMake\Firmata;
-use \PHPMake\Firmata\WebSocketServer\Command\CommandInterface;
 
-class QueryPinState implements CommandInterface {
+class QueryPinState extends JsonCommandAdapter {
 
     public function execute(
         $commandName,
+        $signature,
         array $arguments,
         Firmata\Device $device,
         \Ratchet\ConnectionInterface $from,
@@ -14,12 +14,10 @@ class QueryPinState implements CommandInterface {
     {
         $targetPin = $arguments[0];
         $device->updatePin($targetPin);
-        $from->send(json_encode((object)array(
-            'command' => $commandName,
-            'data' => (object)array(
-                'pin' => $targetPin,
-                'state' => $device->getPin($targetPin)->getState()
-            )
-        )));
+        $data = (object)array(
+            'pin' => $targetPin,
+            'state' => $device->getPin($targetPin)->getState()
+        );
+        $this->send($from, $commandName, $signature, $data);
     }
 }

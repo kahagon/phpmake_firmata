@@ -7,6 +7,7 @@ class QueryCapability implements CommandInterface {
 
     public function execute(
         $commandName,
+        $signature,
         array $arguments,
         Firmata\Device $device,
         \Ratchet\ConnectionInterface $from,
@@ -53,9 +54,7 @@ class QueryCapability implements CommandInterface {
             }
             $capabilities[] = $plainObject;
         }
-        $from->send(json_encode((object)array(
-            'command' => $commandName,
-            'data' => $capabilities
-        )));
+
+        $this->send($from, $commandName, $signature, $capabilities);
     }
 }

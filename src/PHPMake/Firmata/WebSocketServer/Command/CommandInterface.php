@@ -5,6 +5,7 @@ interface CommandInterface {
 
     public function execute(
         $commandName,
+        $signature,
         array $arguments,
         \PHPMake\Firmata\Device $device,
         \Ratchet\ConnectionInterface $connectionFrom,

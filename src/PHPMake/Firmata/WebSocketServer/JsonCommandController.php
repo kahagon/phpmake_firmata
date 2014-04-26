@@ -25,6 +25,7 @@ class JsonCommandController extends Firmata\WebSocketServer\ConnectionHub {
             $command = $factory->getCommand($poCommand->command);
             $command->execute(
                 $poCommand->command,
+                $poCommand->signature,
                 $poCommand->arguments,
                 $this->getDevice(),
                 $connection,
