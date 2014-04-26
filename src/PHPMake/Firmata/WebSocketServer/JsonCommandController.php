@@ -15,7 +15,7 @@ class JsonCommandController
 
     public function notify(Firmata\Device $dev, Firmata\Device\Pin $pin, $state) {
         foreach ($this->getConnections() as $connection) {
-            $from->send(json_encode((object)array(
+            $connection->send(json_encode((object)array(
                 'command' => 'digitalRead',
                 'signature' => null,
                 'data' => (object)array(
