@@ -1,13 +1,29 @@
 <?php
 namespace PHPMake\Firmata\WebSocketServer;
 use \PHPMake\Firmata;
-class JsonCommandController extends Firmata\WebSocketServer\ConnectionHub {
-
+class JsonCommandController
+    extends Firmata\WebSocketServer\ConnectionHub
+    implements Firmata\Device\DigitalPortObserver
+{
     protected $_tickInterval;
 
     public function __construct(Firmata\Device $device, $tickInterval = 30000) {
         parent::__construct($device);
+        $device->addDigitalPortObserver($this);
         $this->_tickInterval = $tickInterval;
+    }
+
+    public function notify(Firmata\Device $dev, Firmata\Device\Pin $pin, $state) {
+        foreach ($this->getConnections() as $connection) {
+            $from->send(json_encode((object)array(
+                'command' => 'digitalRead',
+                'signature' => null,
+                'data' => (object)array(
+                    'pin' => $pin,
+                    'state' => $state
+                )
+            )));
+        }
     }
 
     public function tick(Firmata\Device $dev) {
