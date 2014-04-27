@@ -33,10 +33,6 @@ class Pin {
         return $this->_inputState;
     }
 
-    public function setInputState($inputState) {
-        $this->_inputState = $inputState;
-    }
-
     public function getMode() {
         return $this->_mode;
     }
@@ -55,6 +51,10 @@ class Pin {
 
     public function updateState($state) {
         $this->_state = $state;
+    }
+
+    public function updateInputState($state) {
+        $this->_inputState = $state;
     }
 
     public function updateMode($mode) {

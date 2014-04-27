@@ -301,7 +301,7 @@ class Device extends \PHPMake\SerialPort {
         foreach ($this->_digitalPortObservers as $observer) {
             foreach ($changed as $pinNumber => $state) {
                 $pin = $this->getPin($pinNumber);
-                $pin->setInputState($state);
+                $pin->updateInputState($state);
                 $observer->notify($this, $pin, $state);
             }
         }
@@ -501,6 +501,24 @@ class Device extends \PHPMake\SerialPort {
         $this->write(pack('CCC', $command, $firstByte, $secondByte));
         //$this->updatePin($pinNumber);
         $this->_pins[$pinNumber]->updateState($value?1:0);
+        $this->_drain();
+    }
+
+    public function analogWrite($pin, $value) {
+        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $pinNumber = $this->_pinNumber($pin);
+        $v = $value;
+        $dev->write(pack('CCC',
+            Firmata::SYSEX_START,
+            Firmata::EXTENDED_ANALOG,
+            $pinNumber));
+        do {
+            $dev->write(pack('C', $v & 0x7F));
+            $v = $v >> 7;
+        } while ($v > 0);
+        $this->write(pack('C', Firmata::SYSEX_END));
+
+        $this->_pins[$pinNumber]->updateInputState($value);
         $this->_drain();
     }
 

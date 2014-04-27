@@ -19,6 +19,7 @@ class JsonCommandFactory {
         $this->registerCommand('queryPinState', self::_fqn('QueryPinState'));
         $this->registerCommand('queryPinInputState', self::_fqn('QueryPinInputState'));
         $this->registerCommand('digitalWrite', self::_fqn('DigitalWrite'));
+        $this->registerCommand('analogWrite', self::_fqn('AnalogWrite'));
     }
 
     private static function _fqn($className) {

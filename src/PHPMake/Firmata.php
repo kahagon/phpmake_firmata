@@ -54,6 +54,7 @@ class Firmata {
     const RESPONSE_CAPABILITY = 0x6C;
     const QUERY_PIN_STATE = 0x6D;
     const RESPONSE_PIN_STATE = 0x6E;
+    const EXTENDED_ANALOG = 0x6F;
 
     const SET_PIN_MODE = 0xF4;
 
