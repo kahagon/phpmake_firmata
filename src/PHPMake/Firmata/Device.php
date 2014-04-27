@@ -508,12 +508,12 @@ class Device extends \PHPMake\SerialPort {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $pinNumber = $this->_pinNumber($pin);
         $v = $value;
-        $dev->write(pack('CCC',
+        $this->write(pack('CCC',
             Firmata::SYSEX_START,
             Firmata::EXTENDED_ANALOG,
             $pinNumber));
         do {
-            $dev->write(pack('C', $v & 0x7F));
+            $this->write(pack('C', $v & 0x7F));
             $v = $v >> 7;
         } while ($v > 0);
         $this->write(pack('C', Firmata::SYSEX_END));
