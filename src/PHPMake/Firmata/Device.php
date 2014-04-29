@@ -520,10 +520,18 @@ class Device extends \PHPMake\SerialPort {
         $this->write(pack('CC', $command, $report?1:0));
     }
 
-    public function reportDigitalPin($pin) {
+    public function reportDigitalPin($pin, $report=true) {
         $pin = $this->getPin($pin);
         $this->setPinMode($pin, Firmata::INPUT);
-        $this->reportDigitalPort(Device::portNumberForPin($pin->getNumber()));
+        $this->reportDigitalPort(
+            Device::portNumberForPin($pin->getNumber()), $report);
+    }
+
+    public function reportAnalogPin($pin, $report=true) {
+            $pin = $this->getPin($pin);
+            $this->setPinMode($pin, Firmata::ANALOG);
+            $command = Firmata::REPORT_ANALOG | $pin->getNumber();
+            $this->write(pack('CC', $command, $report?1:0));
     }
 
     public function digitalWrite($pin, $value) {
