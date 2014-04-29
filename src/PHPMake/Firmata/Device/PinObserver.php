@@ -6,6 +6,6 @@ use PHPMake\Firmata\Device;
  *
  * @author oasynnoum
  */
-interface DigitalPortObserver {
+interface PinObserver {
     public function notify(Device $device, Device\Pin $pinNumber, $state);
 }

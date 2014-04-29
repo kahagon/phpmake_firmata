@@ -271,11 +271,11 @@ class Device extends \PHPMake\SerialPort {
         $this->_state = self::STATE_READ_ANALOG;
     }
 
-    public function addDigitalPortObserver(Device\DigitalPortObserver $observer) {
+    public function addDigitalPinObserver(Device\DigitalPinObserver $observer) {
         $this->_digitalPortObservers[] = $observer;
     }
 
-    public function removeDigitalPortObserver($observer) {
+    public function removeDigitalPinObserver($observer) {
         $index = null;
         foreach ($this->_digitalPortObservers as $_index => $_observer) {
             if ($_observer === $observer) {
