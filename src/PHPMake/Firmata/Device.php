@@ -353,7 +353,7 @@ class Device extends \PHPMake\SerialPort {
         if (strlen($c) >0) {
             if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
                 $this->_logger->debug('message is analog'. PHP_EOL);
-                $value = receive7bitBytesData(2);
+                $value = $this->receive7bitBytesData();
                 foreach ($this->_analogPinObservers as $observer) {
                     $observer->notify($this, $this->getPin($pinNumber), $value);
                 }
@@ -639,20 +639,11 @@ class Device extends \PHPMake\SerialPort {
         return $this->_version;
     }
 
-    public function receive7bitBytesData($length) {
-        if (($length%2) != 0) {
-            throw new Exception(sprintf(
-                    '$length(%d) is invalid. the argument must be multiple of 2.',
-                    $length));
-        }
+    public function receive7bitBytesData() {
+        $lsb = $this->_getc() & 0x7F;
+        $msb = $this->_getc() & 0x7F;
 
-        $data7bitByteArray = array();
-        for ($i = 0; $i < $length; $i++) {
-            $c = $this->_getc();
-            $data7bitByteArray[] = $c;
-        }
-
-        return self::dataWith7bitBytesArray($data7bitByteArray);
+        return $msb<<7 | $lsb;
     }
 
     public function receiveSysEx7bitBytesData() {

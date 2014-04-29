@@ -14,9 +14,18 @@ class JsonCommandController
     }
 
     public function notify(Firmata\Device $dev, Firmata\Device\Pin $pin, $state) {
+        $pinMode = $pin->getMode();
+        if ($pinMode == Firmata::INPUT) {
+            $command = 'digitalRead';
+        } else if ($pinMode == Firmata::ANALOG) {
+            $command = 'analogRead';
+        } else {
+            return;
+        }
+
         foreach ($this->getConnections() as $connection) {
             $connection->send(json_encode((object)array(
-                'command' => 'digitalRead',
+                'command' => $command,
                 'signature' => null,
                 'data' => (object)array(
                     'pin' => $pin->getNumber(),
