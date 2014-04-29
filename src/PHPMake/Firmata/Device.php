@@ -345,16 +345,25 @@ class Device extends \PHPMake\SerialPort {
 
     private function _processAnalogReport() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
+        $savedVTime = $this->getVTime();
+        $savedVMin = $this->getVMin();
+        $this->setVTime(0)->setVMin(0);
         $c = $this->_getc();
-        if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
-            $this->_logger->debug('message is analog'. PHP_EOL);
-            $value = receive7bitBytesData(2);
-            foreach ($this->_analogPinObservers as $observer) {
-                $observer->notify($this, $this->getPin($pinNumber), $value);
+        $this->setVTime($savedVTime)->setVMin($savedVMin);
+        if (strlen($c) >0) {
+            if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
+                $this->_logger->debug('message is analog'. PHP_EOL);
+                $value = receive7bitBytesData(2);
+                foreach ($this->_analogPinObservers as $observer) {
+                    $observer->notify($this, $this->getPin($pinNumber), $value);
+                }
+            } else {
+                $this->_logger->debug('message is not analog'. PHP_EOL);
+                $this->_putback($c);
+                $this->_state = self::STATE_REPORT_I2C;
             }
         } else {
-            $this->_logger->debug('message is not analog'. PHP_EOL);
-            $this->_putback($c);
+            $this->_logger->debug('nothing to read for analog'. PHP_EOL);
             $this->_state = self::STATE_REPORT_I2C;
         }
     }
