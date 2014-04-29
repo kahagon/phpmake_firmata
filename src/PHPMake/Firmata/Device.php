@@ -13,7 +13,8 @@ class Device extends \PHPMake\SerialPort {
     protected $_version;
     protected $_pins;
     protected $_capability = null;
-    protected $_digitalPortObservers = array();
+    protected $_analogPinObservers = array();
+    protected $_digitalPinObservers = array();
     private $_digitalPortReportArray = array();
 
     public function __construct($deviceName, $baudRate=57600) {
@@ -271,13 +272,25 @@ class Device extends \PHPMake\SerialPort {
         $this->_state = self::STATE_READ_ANALOG;
     }
 
-    public function addDigitalPinObserver(Device\DigitalPinObserver $observer) {
-        $this->_digitalPortObservers[] = $observer;
+    public function addAnalogPinObserver(Device\PinObserver $observer) {
+        $this->_analogPinObservers[] = $observer;
     }
 
-    public function removeDigitalPinObserver($observer) {
+    public function removeAnalogPinObserver(Device\PinObserver $observer) {
+        self::_removePinObserver($this->_analogPinObservers, $observer);
+    }
+
+    public function addDigitalPinObserver(Device\PinObserver $observer) {
+        $this->_digitalPinObservers[] = $observer;
+    }
+
+    public function removeDigitalPinObserver(Device\PinObserver $observer) {
+        self::_removePinObserver($this->_digitalPinObservers, $observer);
+    }
+
+    private static function _removePinObserver(array $observers, Device\PinObserver $observer) {
         $index = null;
-        foreach ($this->_digitalPortObservers as $_index => $_observer) {
+        foreach ($observers as $_index => $_observer) {
             if ($_observer === $observer) {
                 $index = $_index;
                 break;
@@ -285,7 +298,7 @@ class Device extends \PHPMake\SerialPort {
         }
 
         if (!is_null($index)) {
-            unset($this->_digitalPortObservers[$index]);
+            unset($observers[$index]);
         }
     }
 
@@ -298,7 +311,7 @@ class Device extends \PHPMake\SerialPort {
         $portNumber = $command&((~Firmata::MESSAGE_DIGITAL)&0xFF);
         $report = $this->_getDigitalPortReport($portNumber);
         $changed = $report->setValue($lsb, $msb);
-        foreach ($this->_digitalPortObservers as $observer) {
+        foreach ($this->_digitalPinObservers as $observer) {
             foreach ($changed as $pinNumber => $state) {
                 $pin = $this->getPin($pinNumber);
                 $pin->updateInputState($state);
@@ -306,7 +319,6 @@ class Device extends \PHPMake\SerialPort {
             }
         }
     }
-
 
     private function _getDigitalPortReport($portNumber) {
         if (!array_key_exists($portNumber, $this->_digitalPortReportArray)) {
@@ -320,7 +332,7 @@ class Device extends \PHPMake\SerialPort {
     private function _processCheckDigital() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $c = $this->_getc();
-        if (($c&0xF0) == Firmata::MESSAGE_DIGITAL) {
+        if (($c>>4) == 0x9 /* 0x9 equal to (Firmata::MESSAGE_DIGITAL>>4) */) {
             $this->_logger->debug('message is digital'. PHP_EOL);
             $this->_putback($c);
             $this->_checkDigital();
@@ -328,6 +340,22 @@ class Device extends \PHPMake\SerialPort {
             $this->_logger->debug('message is not digital'. PHP_EOL);
             $this->_putback($c);
             $this->_state = self::STATE_PROCESS_INPUT;
+        }
+    }
+
+    private function _processAnalogReport() {
+        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $c = $this->_getc();
+        if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
+            $this->_logger->debug('message is analog'. PHP_EOL);
+            $value = receive7bitBytesData(2);
+            foreach ($this->_analogPinObservers as $observer) {
+                $observer->notify($this, $this->getPin($pinNumber), $value);
+            }
+        } else {
+            $this->_logger->debug('message is not analog'. PHP_EOL);
+            $this->_putback($c);
+            $this->_state = self::STATE_REPORT_I2C;
         }
     }
 
@@ -343,15 +371,14 @@ class Device extends \PHPMake\SerialPort {
                 $this->_processInput();
                 break;
             case self::STATE_READ_ANALOG:
-                $this->_state = self::STATE_REPORT_I2C;
-                //$recursion = false;
+                $this->_processAnalogReport();
                 break;
             case self::STATE_REPORT_I2C:
                 $this->_state = self::STATE_CHECK_DIGITAL;
                 $recursion = false;
                 break;
             default:
-                throw new Exception('stream got unkown state');
+                throw new Exception('stream got unknown state');
         }
 
         if ($recursion) {

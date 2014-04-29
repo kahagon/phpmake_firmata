@@ -7,5 +7,5 @@ use PHPMake\Firmata\Device;
  * @author oasynnoum
  */
 interface PinObserver {
-    public function notify(Device $device, Device\Pin $pinNumber, $state);
+    public function notify(Device $device, Device\Pin $pin, $state);
 }

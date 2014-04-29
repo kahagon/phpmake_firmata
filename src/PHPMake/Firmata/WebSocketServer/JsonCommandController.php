@@ -3,7 +3,7 @@ namespace PHPMake\Firmata\WebSocketServer;
 use \PHPMake\Firmata;
 class JsonCommandController
     extends Firmata\WebSocketServer\ConnectionHub
-    implements Firmata\Device\DigitalPinObserver
+    implements Firmata\Device\PinObserver
 {
     protected $_tickInterval;
 
