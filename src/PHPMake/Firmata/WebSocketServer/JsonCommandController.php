@@ -10,6 +10,7 @@ class JsonCommandController
     public function __construct(Firmata\Device $device, $tickInterval = 30000) {
         parent::__construct($device);
         $device->addDigitalPinObserver($this);
+        $device->addAnalogPinObserver($this);
         $this->_tickInterval = $tickInterval;
     }
 

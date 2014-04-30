@@ -364,10 +364,10 @@ class Device extends \PHPMake\SerialPort {
         if (strlen($c) >0) {
             if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
                 $this->_logger->debug('message is analog'. PHP_EOL);
-                $pinNumber = $c & 0xF;
+                $analogPinNumber = $c & 0xF;
                 $value = $this->receive7bitBytesData();
                 foreach ($this->_analogPinObservers as $observer) {
-                    $observer->notify($this, $this->getPin($pinNumber), $value);
+                    $observer->notify($this, $this->getPinByAnalogPinNumber($analogPinNumber), $value);
                 }
             } else {
                 $this->_logger->debug('message is not analog'. PHP_EOL);
@@ -525,6 +525,21 @@ class Device extends \PHPMake\SerialPort {
     public function getPin($pin) {
         $pinNumber = $this->_pinNumber($pin);
         return $this->_pins[$pinNumber];
+    }
+
+    public function getPinByAnalogPinNumber($analogPinNumber) {
+        if ($analogPinNumber < 0 || $analogPinNumber > 15) {
+            throw new Exception(
+                'range error. analog pin number should be ' .
+                'equal or greater than 0 and equal or less than 15.');
+        }
+        foreach ($this->_pins as $pin) {
+            if ($pin->getAnalogPinNumber() == $analogPinNumber) {
+                return $pin;
+            }
+        }
+
+        return null;
     }
 
     public function setPinMode($pin, $mode) {
