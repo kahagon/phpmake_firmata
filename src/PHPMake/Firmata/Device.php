@@ -214,25 +214,36 @@ class Device extends \PHPMake\SerialPort {
         );
     }
 
+    private function _processInputSysexAnalogMapping() {
+        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_getc(); // Firmata::SYSEX_START
+        $this->_getc(); // Firmata::RESPONSE_ANALOG_MAPPING
+        $pinCount = count($this->_pins);
+        for ($i = 0; $i < $pinCount; ++$i) {
+            $pin = $this->_pins[$i];
+            $pin->setAnalogPinNumber($this->_getc());
+        }
+        $this->_getc(); // Firmata::SYSEX_END
+    }
+
     private function _processInputSysex() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $s = $this->_getc(); // assume Firmata::SYSEX_START
         $c = $this->_getc();
+        $this->_putback($c);
+        $this->_putback($s);
         switch ($c) {
             case Firmata::RESPONSE_CAPABILITY:
-                $this->_putback($c);
-                $this->_putback($s);
                 $this->_processInputSysexCapability();
                 break;
             case Firmata::RESPONSE_PIN_STATE:
-                $this->_putback($c);
-                $this->_putback($s);
                 $this->_processInputSysexPinState();
                 break;
             case Firmata::QUERY_FIRMWARE:
-                $this->_putback($c);
-                $this->_putback($s);
                 $this->_processInputSysexFirmware();
+                break;
+            case Firmata::RESPONSE_ANALOG_MAPPING:
+                $this->_processInputSysexAnalogMapping();
                 break;
             default:
                 throw new Exception(sprintf('unknown sysex command(0x%02X) detected', $c));
@@ -453,10 +464,20 @@ class Device extends \PHPMake\SerialPort {
         $this->_eval();
     }
 
+    private function _analogMapping() {
+        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->write(pack('CCC',
+                Firmata::SYSEX_START,
+                Firmata::QUERY_ANALOG_MAPPING,
+                Firmata::SYSEX_END));
+        $this->_eval();
+    }
+
     private function _initPins() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $this->_pins = array();
         $this->_initCapability();
+        $this->_analogMapping();
         $this->_logger->debug('state:' . $this->_state . PHP_EOL);
         $totalPins = count($this->_capability);
         for ($i = 0; $i < $totalPins; $i++) {
@@ -529,10 +550,15 @@ class Device extends \PHPMake\SerialPort {
     }
 
     public function reportAnalogPin($pin, $report=true) {
-            $pin = $this->getPin($pin);
+        $pin = $this->getPin($pin);
+        if (($analogPinNumber = $pin->getAnalogPinNumber()) != 0x7F) {
             $this->setPinMode($pin, Firmata::ANALOG);
-            $command = Firmata::REPORT_ANALOG | $pin->getNumber();
+            $command = Firmata::REPORT_ANALOG | $analogPinNumber;
             $this->write(pack('CC', $command, $report?1:0));
+        } else {
+            throw new Exception(
+                sprintf('pin(%d) does not support analog', $pin->getNumber()));
+        }
     }
 
     public function digitalWrite($pin, $value) {

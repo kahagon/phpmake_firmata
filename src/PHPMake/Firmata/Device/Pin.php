@@ -12,17 +12,25 @@ use PHPMake\Firmata\Query;
 class Pin {
     private $_number;
     private $_state;
-    private $_inputState;
+    private $_inputState = Firmata::LOW;
     private $_mode;
     private $_capability;
+    private $_analogPinNumber = 0x7F;
 
     public function __construct($number) {
         $this->_number = $number;
-        $this->_inputState = Firmata::LOW;
     }
 
     public function getNumber() {
         return $this->_number;
+    }
+
+    public function setAnalogPinNumber($analogPinNumber) {
+        $this->_analogPinNumber = $analogPinNumber;
+    }
+
+    public function getAnalogPinNumber() {
+        return $this->_analogPinNumber;
     }
 
     public function getState() {
