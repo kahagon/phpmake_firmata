@@ -4,7 +4,6 @@ use PHPMake\Firmata;
 use PHPMake\Firmata\Device;
 
 class Device extends \PHPMake\SerialPort {
-    private $_state = self::STATE_SETUP;
     private $_putbackBuffer = array();
     private $_logger;
     private $_loop = false;
@@ -12,6 +11,7 @@ class Device extends \PHPMake\SerialPort {
     protected $_firmware;
     protected $_version;
     protected $_pins;
+    private $_pinInited = false;
     protected $_capability = null;
     protected $_analogPinObservers = array();
     protected $_digitalPinObservers = array();
@@ -81,8 +81,6 @@ class Device extends \PHPMake\SerialPort {
             'majorVersion' => (int)$majorVersion,
             'minorVersion' => (int)$minorVersion,
         );
-
-        $this->_state = self::STATE_CHECK_DIGITAL;
     }
 
     private function _preReadCapability() {
@@ -279,8 +277,6 @@ class Device extends \PHPMake\SerialPort {
                 throw new Exception(sprintf(
                         'unknown command(0x%02X) detected', $c));
         }
-
-        $this->_state = self::STATE_READ_ANALOG;
     }
 
     public function addAnalogPinObserver(Device\PinObserver $observer) {
@@ -343,68 +339,63 @@ class Device extends \PHPMake\SerialPort {
     private function _processCheckDigital() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $c = $this->_getc();
-        if (($c>>4) == 0x9 /* 0x9 equal to (Firmata::MESSAGE_DIGITAL>>4) */) {
-            $this->_logger->debug('message is digital'. PHP_EOL);
-            $this->_putback($c);
-            $this->_checkDigital();
-        } else {
-            $this->_logger->debug('message is not digital'. PHP_EOL);
-            $this->_putback($c);
-            $this->_state = self::STATE_PROCESS_INPUT;
-        }
+        $this->_logger->debug('message is digital'. PHP_EOL);
+        $this->_putback($c);
+        $this->_checkDigital();
     }
 
     private function _processAnalogReport() {
+        if (!$this->_pinInited) {
+            return;
+        }
         $this->_logger->debug(__METHOD__.PHP_EOL);
-        $savedVTime = $this->getVTime();
-        $savedVMin = $this->getVMin();
-        $this->setVTime(0)->setVMin(0);
         $c = $this->_getc();
-        $this->setVTime($savedVTime)->setVMin($savedVMin);
-        if (strlen($c) >0) {
-            if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
-                $this->_logger->debug('message is analog'. PHP_EOL);
-                $analogPinNumber = $c & 0xF;
-                $value = $this->receive7bitBytesData();
-                foreach ($this->_analogPinObservers as $observer) {
-                    $observer->notify($this, $this->getPinByAnalogPinNumber($analogPinNumber), $value);
-                }
-            } else {
-                $this->_logger->debug('message is not analog'. PHP_EOL);
-                $this->_putback($c);
-                $this->_state = self::STATE_REPORT_I2C;
-            }
-        } else {
-            $this->_logger->debug('nothing to read for analog'. PHP_EOL);
-            $this->_state = self::STATE_REPORT_I2C;
+        $this->_logger->debug('message is analog'. PHP_EOL);
+        $analogPinNumber = $c & 0xF;
+        $value = $this->receive7bitBytesData();
+        foreach ($this->_analogPinObservers as $observer) {
+            $observer->notify($this, $this->getPinByAnalogPinNumber($analogPinNumber), $value);
         }
     }
 
     private function _eval() {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $this->_noop = false;
-        $recursion = true;
-        switch ($this->_state) {
-            case self::STATE_CHECK_DIGITAL:
-                $this->_processCheckDigital();
-                break;
-            case self::STATE_PROCESS_INPUT:
-                $this->_processInput();
-                break;
-            case self::STATE_READ_ANALOG:
+        $c = $this->_getc();
+        $this->_putback($c);
+        switch ($c) {
+        case Firmata::SYSEX_START:
+            $this->_processInputSysex();
+            break;
+        case Firmata::REPORT_VERSION:
+            $this->_processInputVersion();
+            break;
+        default:
+            if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
                 $this->_processAnalogReport();
-                break;
-            case self::STATE_REPORT_I2C:
-                $this->_state = self::STATE_CHECK_DIGITAL;
-                $recursion = false;
-                break;
-            default:
-                throw new Exception('stream got unknown state');
+            } else if (($c>>4) == 0x9 /* 0x9 equal to (Firmata::MESSAGE_DIGITAL>>4) */) {
+                $this->_processCheckDigital();
+            } else {
+                throw new Exception(sprintf('stream got unknown char(0x%02X)', $c));
+            }
         }
+    }
 
-        if ($recursion) {
-            $this->_eval();
+    public function dumpBuffer() {
+        $data = $this->_putbackBuffer;
+        $colLimit = 15;
+        $col = 0;
+        $length = count($data);
+        for ($i=0; $i < $length; $i++) {
+            printf('%02X ', $data[1]);
+            if ($col==$colLimit) {
+                $col=0;
+                print PHP_EOL;
+            } else {
+                $col++;
+            }
         }
+        print PHP_EOL;
     }
 
     private function _getc() {
@@ -412,17 +403,16 @@ class Device extends \PHPMake\SerialPort {
             return array_shift($this->_putbackBuffer);
         }
 
-        $d = $this->read(1);
-        if (strlen($d) > 0) {
-            $_c = unpack('C', $d);
-
-            $c = $_c[1];
-            //printf('0x%02X ', $c);
-        } else {
-            $c = null;
+        $d = $this->read(1024);
+        $length = strlen($d);
+        for ($i = 0; $i < $length; $i++) {
+            $_c = unpack('C*', substr($d, $i, 1));
+            foreach ($_c as $index => $c) {
+                array_push($this->_putbackBuffer, $c);
+            }
         }
 
-        return $c;
+        return $this->_getc();
     }
 
     private function _putback($c) {
@@ -436,16 +426,26 @@ class Device extends \PHPMake\SerialPort {
     public function run(Firmata\LoopDelegate $delegate) {
         $this->_logger->debug(__METHOD__.PHP_EOL);
         $this->_loop = true;
+        $previous = 0;
+        $baseInterval = self::getDeviceLoopMinIntervalInMicroseconds();
         $interval = $delegate->getInterval();
         while ($this->_loop) {
-            $delegate->tick($this);
-            $this->noop();
-            usleep($interval);
+            $current = microtime(true);
+            $elapsed = $current - $previous;
+            if ($elapsed >= $interval) {
+                $delegate->tick($this);
+                $this->noop();
+            }
+            usleep($baseInterval);
         }
     }
 
+    public static function getDeviceLoopMinIntervalInMicroseconds() {
+        return 5000;
+    }
+
     private function _drain() {
-        $this->queryVersion();
+        $this->_eval();
     }
 
     public function noop() {
@@ -478,13 +478,22 @@ class Device extends \PHPMake\SerialPort {
         $this->_pins = array();
         $this->_initCapability();
         $this->_analogMapping();
-        $this->_logger->debug('state:' . $this->_state . PHP_EOL);
         $totalPins = count($this->_capability);
         for ($i = 0; $i < $totalPins; $i++) {
             $pin = $this->_pins[$i];
             $pin->setCapability($this->_capability[$i]);
             $this->updatePin($pin);
+            if ($pin->getAnalogPinNumber() != 0x7F) {
+                $this->reportAnalogPin($pin);
+            }
         }
+        $this->write(pack('CCCCC',
+            Firmata::SYSEX_START,
+            Firmata::SAMPLING_INTERVAL,
+            0x32,
+            0x00,
+            Firmata::SYSEX_END));
+        $this->_pinInited = true;
     }
 
     public function updatePin($pin) {
@@ -723,10 +732,4 @@ class Device extends \PHPMake\SerialPort {
 
         return $data;
     }
-
-    const STATE_SETUP = 'STATE_SETUP';
-    const STATE_CHECK_DIGITAL = 'STATE_CHECK_DIGITAL';
-    const STATE_PROCESS_INPUT = 'STATE_PROCESS_INPUT';
-    const STATE_READ_ANALOG = 'STATE_READ_ANALOG';
-    const STATE_REPORT_I2C = 'STATE_REPORT_I2C';
 }

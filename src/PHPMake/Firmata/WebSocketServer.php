@@ -20,12 +20,20 @@ class WebSocketServer {
     private function _initLoop() {
         $component = $this->_component;
         $device = $this->_device;
-        $tick = function () use ($component, $device) {
-            $component->tick($device);
-            $device->noop();
+        $previous = 0;
+        $interval = $this->_component->getInterval()/1000000;
+        $tick = function () use ($component, $device, $previous, $interval) {
+            $current = microtime(true);
+            $elapsed = $current - $previous;
+            if ($elapsed >= $interval) {
+                $component->tick($device);
+                $device->noop();
+                $previous = $current;
+            }
         };
+        $baseInterval = Firmata\Device::getDeviceLoopMinIntervalInMicroseconds();
         $this->_loop = new \React\EventLoop\StreamSelectLoop();
-        $this->_loop->addPeriodicTimer($this->_component->getInterval()/1000000, $tick);
+        $this->_loop->addPeriodicTimer($baseInterval/1000000, $tick);
     }
 
     private function _initServer($port, $address) {
