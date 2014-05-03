@@ -34,9 +34,9 @@ class Device extends \PHPMake\SerialPort {
         while (true) {
             $t = $this->_getc();
             $c = $byteArray[$index];
-            $this->_logger->debug(sprintf('$t: %s, $c: %s'.PHP_EOL, $t, $c));
+            $this->_logger->debug(sprintf('$t: %s, $c: %s', $t, $c));
             if ($c == Firmata::ANY_BYTE || $t == $c) {
-                $this->_logger->debug('match' . PHP_EOL);
+                $this->_logger->debug('match');
                 $buffer[] = $t;
                 if ($index == $length-1) {
                     break;
@@ -44,7 +44,7 @@ class Device extends \PHPMake\SerialPort {
                     ++$index;
                 }
             } else {
-                $this->_logger->debug('reset' . PHP_EOL);
+                $this->_logger->debug('reset');
                 $index = 0; // reset
                 unset($buffer);
                 $buffer = array();
@@ -84,7 +84,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _preReadCapability() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_capability = array();
         $buffer = array();
         $pinCount = 0;
@@ -117,23 +117,24 @@ class Device extends \PHPMake\SerialPort {
             }
         }
 
+        $logstr = '';
         $bufferLength = count($buffer);
         for ($i = $bufferLength-1; $i >= 0; $i--) {
             $c = $buffer[$i];
-            $this->_logger->debug(sprintf('0x%02X ', $c));
+            $logstr .= sprintf('0x%02X ', $c);
             $this->_putback($c);
         }
-        $this->_logger->debug(PHP_EOL);
+        $this->_logger->debug($logstr);
 
         for ($i = 0; $i < $pinCount; $i++) {
             $this->_capability[] = new Device\PinCapability();
             $this->_pins[] = new Device\Pin($i);
         }
-        $this->_logger->debug('pinCount: '.$pinCount . PHP_EOL);
+        $this->_logger->debug('pinCount: '.$pinCount);
     }
 
     private function _processInputSysexCapability() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         if (is_null($this->_capability)) {
             $this->_preReadCapability();
         }
@@ -168,7 +169,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInputSysexPinState() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
         $this->_getc(); // Firmata::RESPONSE_PIN_STATE
         $pinNumber = $this->_getc();
@@ -199,7 +200,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInputSysexFirmware() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
         $this->_getc(); // Firmata::QUERY_FIRMWARE
         $majorVersion = $this->_getc();
@@ -213,7 +214,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInputSysexAnalogMapping() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
         $this->_getc(); // Firmata::RESPONSE_ANALOG_MAPPING
         $pinCount = count($this->_pins);
@@ -225,7 +226,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInputSysex() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $s = $this->_getc(); // assume Firmata::SYSEX_START
         $c = $this->_getc();
         $this->_putback($c);
@@ -249,7 +250,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInputVersion() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $c = $this->_getc(); // assume Firmata::REPORT_VERSION
         $majorVersion = $this->_getc();
         $minorVersion = $this->_getc();
@@ -259,7 +260,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _processInput() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $c = $this->_getc();
         switch ($c) {
             case Firmata::SYSEX_START:
@@ -309,8 +310,8 @@ class Device extends \PHPMake\SerialPort {
         }
     }
 
-    private function _checkDigital() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+    private function _processCheckDigital() {
+        $this->_logger->debug(__METHOD__);
         $command = $this->_getc(); // assume Firmata::MESSAGE_DIGITAL
         $lsb = $this->_getc();
         $msb = $this->_getc();
@@ -336,21 +337,13 @@ class Device extends \PHPMake\SerialPort {
         return $this->_digitalPortReportArray[$portNumber];
     }
 
-    private function _processCheckDigital() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
-        $c = $this->_getc();
-        $this->_logger->debug('message is digital'. PHP_EOL);
-        $this->_putback($c);
-        $this->_checkDigital();
-    }
-
     private function _processAnalogReport() {
         if (!$this->_pinInited) {
             return;
         }
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $c = $this->_getc();
-        $this->_logger->debug('message is analog'. PHP_EOL);
+        $this->_logger->debug('message is analog');
         $analogPinNumber = $c & 0xF;
         $value = $this->receive7bitBytesData();
         foreach ($this->_analogPinObservers as $observer) {
@@ -359,7 +352,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _eval() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_noop = false;
         $c = $this->_getc();
         $this->_putback($c);
@@ -424,7 +417,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     public function run(Firmata\LoopDelegate $delegate) {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_loop = true;
         $previous = 0;
         $baseInterval = self::getDeviceLoopMinIntervalInMicroseconds();
@@ -456,7 +449,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _initCapability() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->write(pack('CCC',
                 Firmata::SYSEX_START,
                 Firmata::QUERY_CAPABILITY,
@@ -465,7 +458,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _analogMapping() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->write(pack('CCC',
                 Firmata::SYSEX_START,
                 Firmata::QUERY_ANALOG_MAPPING,
@@ -474,7 +467,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     private function _initPins() {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $this->_pins = array();
         $this->_initCapability();
         $this->_analogMapping();
@@ -497,7 +490,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     public function updatePin($pin) {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
         $this->write(pack('CCCC',
             Firmata::SYSEX_START,
@@ -586,7 +579,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     public function digitalWrite($pin, $value) {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
         $value = $value ? Firmata::HIGH : Firmata::LOW;
         $portNumber = self::portNumberForPin($pinNumber);
@@ -600,7 +593,7 @@ class Device extends \PHPMake\SerialPort {
     }
 
     public function analogWrite($pin, $value) {
-        $this->_logger->debug(__METHOD__.PHP_EOL);
+        $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
         $v = $value;
         $this->write(pack('CCC',
