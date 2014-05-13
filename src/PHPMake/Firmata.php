@@ -1,13 +1,42 @@
 <?php
+/**
+ * Firmata is a protocol for controlling device like Arduino from host machine.
+ * \PHPMake\Firmata implements Firmata as host machine side.
+ * This API hides protocol details and provides object-oriented interface.
+ * Details of Firmata Protocol, see Firmata homepage({@link http://firmata.org/wiki/Main_Page}).
+ *
+ * @see http://firmata.org/wiki/Main_Page Firmata homepage
+ * @author Keng-ichi Ahagon <k.ahagon@n-3.so>
+ */
+
 namespace PHPMake;
 
+/**
+ * Firmata utility class
+ *
+ * This class contains common method and constants.
+ */
 class Firmata {
     private static $_logger;
 
+    /**
+     * Set logger for this Firmata framework internally logging.
+     * If you want to call this method, 
+     * you should call this at first, before calling any other methods.
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     * @return void
+     */
     public static function setLogger(\Psr\Log\LoggerInterface $logger) {
         self::$_logger = $logger;
     }
 
+    /**
+     * Return LoggerInterface.
+     * If not called setLogger() before this method, return instance of \PHPMake\Logger.
+     *
+     * @return \Psr\Log\LoggerInterface 
+     */
     public static function getLogger() {
         if (!self::$_logger) {
             self::$_logger = new \PHPMake\Logger();
@@ -17,6 +46,12 @@ class Firmata {
         return self::$_logger;
     }
 
+    /**
+     * Convert integer to string which specify pin mode.
+     *
+     * @param int $mode
+     * @return string
+     */
     public static function modeStringFromCode($mode) {
         switch ($mode) {
         case self::INPUT:
@@ -38,7 +73,14 @@ class Firmata {
         }
     }
 
+    /**
+     * High voltage.
+     */
     const HIGH = 1;
+
+    /**
+     * Low voltage.
+     */
     const LOW = 0;
 
     const MESSAGE_ANALOG = 0xE0;
@@ -61,12 +103,39 @@ class Firmata {
 
     const SET_PIN_MODE = 0xF4;
 
+    /**
+     * Digital input pin mode.
+     */
     const INPUT = 0x00;
+
+    /**
+     * Digital write pin mode.
+     */
     const OUTPUT = 0x01;
+
+    /**
+     * Analog read pin mode.
+     */
     const ANALOG = 0x02;
+
+    /**
+     * PWM(analog write) pin mode.
+     */
     const PWM = 0x03;
+
+    /**
+     * Servo pin mode.
+     */
     const SERVO = 0x04;
+
+    /**
+     *
+     */
     const SHIFT = 0x05;
+
+    /**
+     * I2C pin mode.
+     */
     const I2C = 0x06;
 
     const ANY_BYTE = '*';

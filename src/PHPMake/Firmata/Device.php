@@ -1,8 +1,15 @@
 <?php
+/**
+ * @author oasynnoum <k.ahagon@n-3.so>
+ */
+
 namespace PHPMake\Firmata;
 use PHPMake\Firmata;
 use PHPMake\Firmata\Device;
 
+/**
+ * This class presents Firmata device.
+ */
 class Device extends \PHPMake\SerialPort {
     private $_putbackBuffer = array();
     private $_logger;
@@ -17,6 +24,20 @@ class Device extends \PHPMake\SerialPort {
     protected $_digitalPinObservers = array();
     private $_digitalPortReportArray = array();
 
+    /**
+     * Instantiates and open target device.
+     *
+     * Device name is different for each OSes.
+     * Typical device name is following.
+     * On Windows, the name will be COM*.
+     * On Linux, the name will be /dev/ttyUSB* or /dev/ttyACM*.
+     * On Mac OSX, the name will be /dev/tty.* or /dev/cu.*.
+     *
+     * Baud rate must be equal to firmware's.
+     *
+     * @param string $deviceName
+     * @param integer $baudRate
+     */
     public function __construct($deviceName, $baudRate=57600) {
         parent::__construct($deviceName);
         $this->_logger = Firmata::getLogger();
@@ -280,18 +301,46 @@ class Device extends \PHPMake\SerialPort {
         }
     }
 
+    /**
+     * Set observer interface to receive notification from device.
+     * Device issues notification when pin state changed.
+     * To observe specific analog pin, invoke reportAnalogPin() before invoke this method.
+     *
+     * @param \PHPMake\Firmata\Device\PinObserver $observer
+     * @return void
+     */
     public function addAnalogPinObserver(Device\PinObserver $observer) {
         $this->_analogPinObservers[] = $observer;
     }
 
+    /**
+     * Remove a PinObserver which is added by addAnalogPinObserver().
+     *
+     * @param \PHPMake\Firmata\Device\PinObserver $observer an instance which is to be removed
+     * @return void
+     */
     public function removeAnalogPinObserver(Device\PinObserver $observer) {
         self::_removePinObserver($this->_analogPinObservers, $observer);
     }
 
+    /**
+     * Set observer interface to receive notification from device.
+     * Device issues notification when pin state changed.
+     * To observe specific digital pin, invoke reportDigitalPin() before invoke this method.
+     *
+     * @param \PHPMake\Firmata\Device\PinObserver $observer
+     * @return void
+     */
     public function addDigitalPinObserver(Device\PinObserver $observer) {
         $this->_digitalPinObservers[] = $observer;
     }
 
+    /**
+     * Remove a PinObserver which is added by addDigitalPinObserver().
+     *
+     * @param \PHPMake\Firmata\Device\PinObserver $observer an instance which is to be removed
+     * @return void
+     */
     public function removeDigitalPinObserver(Device\PinObserver $observer) {
         self::_removePinObserver($this->_digitalPinObservers, $observer);
     }
@@ -374,6 +423,12 @@ class Device extends \PHPMake\SerialPort {
         }
     }
 
+    /**
+     * Debugging method.
+     * This method prints current buffer contents.
+     *
+     * @return void
+     */
     public function dumpBuffer() {
         $data = $this->_putbackBuffer;
         $colLimit = 15;
