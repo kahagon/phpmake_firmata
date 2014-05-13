@@ -467,10 +467,24 @@ class Device extends \PHPMake\SerialPort {
         array_unshift($this->_putbackBuffer, $c);
     }
 
+    /**
+     * Stop device loop.
+     *
+     * @return void
+     */
     public function stop() {
         $this->_loop = false;
     }
 
+    /**
+     * Starts device loop.
+     * Device loop is routine to deal device with isochronous interval.
+     * And this method is used to observe pin state.
+     * This method will keep blocking until method stop() invoking.
+     *
+     * @param \PHPMake\Firmata\LoopDelegate $delegate
+     * @return void
+     */
     public function run(Firmata\LoopDelegate $delegate) {
         $this->_logger->debug(__METHOD__);
         $this->_loop = true;
@@ -496,6 +510,15 @@ class Device extends \PHPMake\SerialPort {
         $this->_eval();
     }
 
+    /**
+     * NO OPeration.
+     * This method is used internally.
+     * The reason why is public, 
+     * to be able to use this method from WebSocketServer namespace.
+     *
+     * @deprecated
+     * @return void
+     */
     public function noop() {
         if ($this->_noop) {
             $this->_drain();

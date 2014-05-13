@@ -6,7 +6,7 @@
  * Details of Firmata Protocol, see Firmata homepage({@link http://firmata.org/wiki/Main_Page}).
  *
  * @see http://firmata.org/wiki/Main_Page Firmata homepage
- * @author Keng-ichi Ahagon <k.ahagon@n-3.so>
+ * @author oasynnoum <k.ahagon@n-3.so>
  */
 
 namespace PHPMake;
