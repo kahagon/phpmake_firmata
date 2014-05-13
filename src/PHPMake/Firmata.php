@@ -21,8 +21,8 @@ class Firmata {
 
     /**
      * Set logger for this Firmata framework internally logging.
-     * If you want to call this method, 
-     * you should call this at first, before calling any other methods.
+     * If you want to set customized logger, 
+     * this method should be called at first, before calling any other methods.
      *
      * @param \Psr\Log\LoggerInterface $logger
      * @return void
