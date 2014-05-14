@@ -44,6 +44,7 @@ class WebSocketServer {
     }
 
     public function run() {
+        $this->_device->reportAnalogPinAll();
         $this->_server->run();
     }
 }

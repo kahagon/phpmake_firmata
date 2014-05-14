@@ -10,7 +10,7 @@ use PHPMake\Firmata\Device;
 /**
  * This class presents Firmata device.
  */
-class Device extends \PHPMake\SerialPort 
+class Device extends \PHPMake\SerialPort
 {/*{{{*/
     private $_putbackBuffer = array();
     private $_logger;
@@ -39,7 +39,7 @@ class Device extends \PHPMake\SerialPort
      * @param string $deviceName
      * @param integer $baudRate
      */
-    public function __construct($deviceName, $baudRate=57600) 
+    public function __construct($deviceName, $baudRate=57600)
     {/*{{{*/
         parent::__construct($deviceName);
         $this->_logger = Firmata::getLogger();
@@ -50,7 +50,7 @@ class Device extends \PHPMake\SerialPort
         $this->_initPins();
     }/*}}}*/
 
-    public function waitData(array $byteArray) 
+    public function waitData(array $byteArray)
     {/*{{{*/
         $buffer = array();
         $length = count($byteArray);
@@ -78,7 +78,7 @@ class Device extends \PHPMake\SerialPort
         return $buffer;
     }/*}}}*/
 
-    private function _setup() 
+    private function _setup()
     {/*{{{*/
         $buffer = $this->waitData(array(
             Firmata::REPORT_VERSION,
@@ -108,7 +108,7 @@ class Device extends \PHPMake\SerialPort
         );
     }/*}}}*/
 
-    private function _preReadCapability() 
+    private function _preReadCapability()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_capability = array();
@@ -159,7 +159,7 @@ class Device extends \PHPMake\SerialPort
         $this->_logger->debug('pinCount: '.$pinCount);
     }/*}}}*/
 
-    private function _processInputSysexCapability() 
+    private function _processInputSysexCapability()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         if (is_null($this->_capability)) {
@@ -195,7 +195,7 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    private function _processInputSysexPinState() 
+    private function _processInputSysexPinState()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
@@ -227,7 +227,7 @@ class Device extends \PHPMake\SerialPort
         $pin->updateState($pinState);
     }/*}}}*/
 
-    private function _processInputSysexFirmware() 
+    private function _processInputSysexFirmware()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
@@ -242,7 +242,7 @@ class Device extends \PHPMake\SerialPort
         );
     }/*}}}*/
 
-    private function _processInputSysexAnalogMapping() 
+    private function _processInputSysexAnalogMapping()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_getc(); // Firmata::SYSEX_START
@@ -255,7 +255,7 @@ class Device extends \PHPMake\SerialPort
         $this->_getc(); // Firmata::SYSEX_END
     }/*}}}*/
 
-    private function _processInputSysex() 
+    private function _processInputSysex()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $s = $this->_getc(); // assume Firmata::SYSEX_START
@@ -280,7 +280,7 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    private function _processInputVersion() 
+    private function _processInputVersion()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $c = $this->_getc(); // assume Firmata::REPORT_VERSION
@@ -321,7 +321,7 @@ class Device extends \PHPMake\SerialPort
      * @param \PHPMake\Firmata\Device\PinObserver $observer
      * @return void
      */
-    public function addAnalogPinObserver(Device\PinObserver $observer) 
+    public function addAnalogPinObserver(Device\PinObserver $observer)
     {/*{{{*/
         $this->_analogPinObservers[] = $observer;
     }/*}}}*/
@@ -332,7 +332,7 @@ class Device extends \PHPMake\SerialPort
      * @param \PHPMake\Firmata\Device\PinObserver $observer an instance which is to be removed
      * @return void
      */
-    public function removeAnalogPinObserver(Device\PinObserver $observer) 
+    public function removeAnalogPinObserver(Device\PinObserver $observer)
     {/*{{{*/
         self::_removePinObserver($this->_analogPinObservers, $observer);
     }/*}}}*/
@@ -345,7 +345,7 @@ class Device extends \PHPMake\SerialPort
      * @param \PHPMake\Firmata\Device\PinObserver $observer
      * @return void
      */
-    public function addDigitalPinObserver(Device\PinObserver $observer) 
+    public function addDigitalPinObserver(Device\PinObserver $observer)
     {/*{{{*/
         $this->_digitalPinObservers[] = $observer;
     }/*}}}*/
@@ -356,12 +356,12 @@ class Device extends \PHPMake\SerialPort
      * @param \PHPMake\Firmata\Device\PinObserver $observer an instance which is to be removed
      * @return void
      */
-    public function removeDigitalPinObserver(Device\PinObserver $observer) 
+    public function removeDigitalPinObserver(Device\PinObserver $observer)
     {/*{{{*/
         self::_removePinObserver($this->_digitalPinObservers, $observer);
     }/*}}}*/
 
-    private static function _removePinObserver(array $observers, Device\PinObserver $observer) 
+    private static function _removePinObserver(array $observers, Device\PinObserver $observer)
     {/*{{{*/
         $index = null;
         foreach ($observers as $_index => $_observer) {
@@ -376,7 +376,7 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    private function _processCheckDigital() 
+    private function _processCheckDigital()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $command = $this->_getc(); // assume Firmata::MESSAGE_DIGITAL
@@ -395,7 +395,7 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    private function _getDigitalPortReport($portNumber) 
+    private function _getDigitalPortReport($portNumber)
     {/*{{{*/
         if (!array_key_exists($portNumber, $this->_digitalPortReportArray)) {
             $this->_digitalPortReportArray[$portNumber]
@@ -405,7 +405,7 @@ class Device extends \PHPMake\SerialPort
         return $this->_digitalPortReportArray[$portNumber];
     }/*}}}*/
 
-    private function _processAnalogReport() 
+    private function _processAnalogReport()
     {/*{{{*/
         if (!$this->_pinInited) {
             return;
@@ -420,7 +420,7 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    private function _eval() 
+    private function _eval()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_noop = false;
@@ -434,9 +434,9 @@ class Device extends \PHPMake\SerialPort
             $this->_processInputVersion();
             break;
         default:
-            if (($c>>4) == 0xE /* 0xE equal to (Firmata::MESSAGE_ANALOG>>4) */) {
+            if (($c>>4) == 0xE /* 0xE is equal to (Firmata::MESSAGE_ANALOG>>4) */) {
                 $this->_processAnalogReport();
-            } else if (($c>>4) == 0x9 /* 0x9 equal to (Firmata::MESSAGE_DIGITAL>>4) */) {
+            } else if (($c>>4) == 0x9 /* 0x9 is equal to (Firmata::MESSAGE_DIGITAL>>4) */) {
                 $this->_processCheckDigital();
             } else {
                 throw new Exception(sprintf('stream got unknown char(0x%02X)', $c));
@@ -450,7 +450,7 @@ class Device extends \PHPMake\SerialPort
      *
      * @return void
      */
-    public function dumpBuffer() 
+    public function dumpBuffer()
     {/*{{{*/
         $data = $this->_putbackBuffer;
         $colLimit = 15;
@@ -468,7 +468,7 @@ class Device extends \PHPMake\SerialPort
         print PHP_EOL;
     }/*}}}*/
 
-    private function _getc() 
+    private function _getc()
     {/*{{{*/
         if (count($this->_putbackBuffer) > 0) {
             return array_shift($this->_putbackBuffer);
@@ -486,7 +486,7 @@ class Device extends \PHPMake\SerialPort
         return $this->_getc();
     }/*}}}*/
 
-    private function _putback($c) 
+    private function _putback($c)
     {/*{{{*/
         array_unshift($this->_putbackBuffer, $c);
     }/*}}}*/
@@ -496,7 +496,7 @@ class Device extends \PHPMake\SerialPort
      *
      * @return void
      */
-    public function stop() 
+    public function stop()
     {/*{{{*/
         $this->_loop = false;
     }/*}}}*/
@@ -504,15 +504,19 @@ class Device extends \PHPMake\SerialPort
     /**
      * Starts device loop.
      * Device loop is routine to deal device with isochronous interval.
-     * And this method is used to observe pin state.
      * This method will keep blocking until method stop() invoking.
+     *
+     * This method is used to observe pin state.
+     * And enable analog pin report
+     * for receiving and parsing data continuously from device.
      *
      * @param \PHPMake\Firmata\LoopDelegate $delegate
      * @return void
      */
-    public function run(Firmata\LoopDelegate $delegate) 
+    public function run(Firmata\LoopDelegate $delegate)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
+        $this->reportAnalogPinAll();
         $this->_loop = true;
         $previous = 0;
         $baseInterval = self::getDeviceLoopMinIntervalInMicroseconds();
@@ -528,12 +532,12 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    public static function getDeviceLoopMinIntervalInMicroseconds() 
+    public static function getDeviceLoopMinIntervalInMicroseconds()
     {/*{{{*/
         return 5000;
     }/*}}}*/
 
-    private function _drain() 
+    private function _drain()
     {/*{{{*/
         $this->_eval();
     }/*}}}*/
@@ -541,13 +545,13 @@ class Device extends \PHPMake\SerialPort
     /**
      * NO OPeration.
      * This method is used internally.
-     * The reason why is public, 
+     * The reason why is public,
      * to be able to use this method from WebSocketServer namespace.
      *
      * @deprecated
      * @return void
      */
-    public function noop() 
+    public function noop()
     {/*{{{*/
         if ($this->_noop) {
             $this->_drain();
@@ -555,7 +559,7 @@ class Device extends \PHPMake\SerialPort
         $this->_noop = true;
     }/*}}}*/
 
-    private function _initCapability() 
+    private function _initCapability()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->write(pack('CCC',
@@ -565,7 +569,7 @@ class Device extends \PHPMake\SerialPort
         $this->_eval();
     }/*}}}*/
 
-    private function _analogMapping() 
+    private function _analogMapping()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->write(pack('CCC',
@@ -575,7 +579,7 @@ class Device extends \PHPMake\SerialPort
         $this->_eval();
     }/*}}}*/
 
-    private function _initPins() 
+    private function _initPins()
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $this->_pins = array();
@@ -586,9 +590,6 @@ class Device extends \PHPMake\SerialPort
             $pin = $this->_pins[$i];
             $pin->setCapability($this->_capability[$i]);
             $this->updatePin($pin);
-            if ($pin->getAnalogPinNumber() != 0x7F) {
-                $this->reportAnalogPin($pin);
-            }
         }
         $this->write(pack('CCCCC',
             Firmata::SYSEX_START,
@@ -599,7 +600,7 @@ class Device extends \PHPMake\SerialPort
         $this->_pinInited = true;
     }/*}}}*/
 
-    public function updatePin($pin) 
+    public function updatePin($pin)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
@@ -611,7 +612,7 @@ class Device extends \PHPMake\SerialPort
         $this->_eval();
     }/*}}}*/
 
-    private function _pinNumber($pin) 
+    private function _pinNumber($pin)
     {/*{{{*/
         if ($pin instanceof Device\Pin) {
             $pinNumber = $pin->getNumber();
@@ -627,24 +628,24 @@ class Device extends \PHPMake\SerialPort
         return $pinNumber;
     }/*}}}*/
 
-    public function getCapabilities() 
+    public function getCapabilities()
     {/*{{{*/
         return $this->_capability;
     }/*}}}*/
 
-    public function getCapability($pin) 
+    public function getCapability($pin)
     {/*{{{*/
         $pinNumber = $this->_pinNumber($pin);
         return $this->_capability[$pinNumber];
     }/*}}}*/
 
-    public function getPin($pin) 
+    public function getPin($pin)
     {/*{{{*/
         $pinNumber = $this->_pinNumber($pin);
         return $this->_pins[$pinNumber];
     }/*}}}*/
 
-    public function getPinByAnalogPinNumber($analogPinNumber) 
+    public function getPinByAnalogPinNumber($analogPinNumber)
     {/*{{{*/
         if ($analogPinNumber < 0 || $analogPinNumber > 15) {
             throw new Exception(
@@ -660,7 +661,7 @@ class Device extends \PHPMake\SerialPort
         return null;
     }/*}}}*/
 
-    public function setPinMode($pin, $mode) 
+    public function setPinMode($pin, $mode)
     {/*{{{*/
         $pin = $this->getPin($pin);
         $this->write(pack('CCC',
@@ -671,13 +672,13 @@ class Device extends \PHPMake\SerialPort
         $this->updatePin($pin);
     }/*}}}*/
 
-    public function reportDigitalPort($portNumber, $report=true) 
+    public function reportDigitalPort($portNumber, $report=true)
     {/*{{{*/
         $command = Firmata::REPORT_DIGITAL | $portNumber;
         $this->write(pack('CC', $command, $report?1:0));
     }/*}}}*/
 
-    public function reportDigitalPin($pin, $report=true) 
+    public function reportDigitalPin($pin, $report=true)
     {/*{{{*/
         $pin = $this->getPin($pin);
         $this->setPinMode($pin, Firmata::INPUT);
@@ -685,7 +686,7 @@ class Device extends \PHPMake\SerialPort
             Device::portNumberForPin($pin->getNumber()), $report);
     }/*}}}*/
 
-    public function reportAnalogPin($pin, $report=true) 
+    public function reportAnalogPin($pin, $report=true)
     {/*{{{*/
         $pin = $this->getPin($pin);
         if (($analogPinNumber = $pin->getAnalogPinNumber()) != 0x7F) {
@@ -698,7 +699,18 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    public function digitalWrite($pin, $value) 
+    public function reportAnalogPinAll($report=true)
+    {/*{{{*/
+        $totalPins = count($this->_capability);
+        for ($i = 0; $i < $totalPins; $i++) {
+            $pin = $this->getPin($i);
+            if ($pin->getAnalogPinNumber() != 0x7F) {
+                $this->reportAnalogPin($pin, $report);
+            }
+        }
+    }/*}}}*/
+
+    public function digitalWrite($pin, $value)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
@@ -708,12 +720,10 @@ class Device extends \PHPMake\SerialPort
         $firstByte = $this->_makeFirstByteForDigitalWrite($pinNumber, $value);
         $secondByte = $this->_makeSecondByteForDigitalWrite($pinNumber, $value);
         $this->write(pack('CCC', $command, $firstByte, $secondByte));
-        //$this->updatePin($pinNumber);
         $this->_pins[$pinNumber]->updateState($value?1:0);
-        $this->_drain();
     }/*}}}*/
 
-    public function analogWrite($pin, $value) 
+    public function analogWrite($pin, $value)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
@@ -729,10 +739,9 @@ class Device extends \PHPMake\SerialPort
         $this->write(pack('C', Firmata::SYSEX_END));
 
         $this->_pins[$pinNumber]->updateInputState($value);
-        $this->_drain();
     }/*}}}*/
 
-    public function _makeFirstByteForDigitalWrite($pinNumber, $value) 
+    public function _makeFirstByteForDigitalWrite($pinNumber, $value)
     {/*{{{*/
         $currentFirstByteState = 0;
         $pinLocationInPort = self::pinLocationInPort($pinNumber);
@@ -753,7 +762,7 @@ class Device extends \PHPMake\SerialPort
         return ($currentFirstByteState) & 0x7F;
     }/*}}}*/
 
-    public function _makeSecondByteForDigitalWrite($pinNumber, $value) 
+    public function _makeSecondByteForDigitalWrite($pinNumber, $value)
     {/*{{{*/
         $portNumber = self::portNumberForPin($pinNumber);
         $firstPinNumberInPort = (($portNumber + 1) * 8) - 1;
@@ -767,7 +776,7 @@ class Device extends \PHPMake\SerialPort
         return $currentSecondByteState;
     }/*}}}*/
 
-    private function _updatePinStateInPort($portNumber) 
+    private function _updatePinStateInPort($portNumber)
     {/*{{{*/
         $firstPinNumberInPort = $portNumber * 8;
         $limit = 8;
@@ -780,22 +789,22 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
-    public static function pinLocationInPort($pinNumber) 
+    public static function pinLocationInPort($pinNumber)
     {/*{{{*/
         return $pinNumber%8;
     }/*}}}*/
 
-    public static function portNumberForPin($pinNumber) 
+    public static function portNumberForPin($pinNumber)
     {/*{{{*/
         return floor($pinNumber/8);
     }/*}}}*/
 
-    public static function pinNumber($pinLocationInPort, $portNumber) 
+    public static function pinNumber($pinLocationInPort, $portNumber)
     {/*{{{*/
         return $portNumber*8 + $pinLocationInPort;
     }/*}}}*/
 
-    public function queryFirmware() 
+    public function queryFirmware()
     {/*{{{*/
         $this->write(pack('CCC',
                 Firmata::SYSEX_START,
@@ -805,12 +814,12 @@ class Device extends \PHPMake\SerialPort
         return $this->_firmware;
     }/*}}}*/
 
-    public function getFirmware() 
+    public function getFirmware()
     {/*{{{*/
         return $this->_firmware;
     }/*}}}*/
 
-    public function queryVersion() 
+    public function queryVersion()
     {/*{{{*/
         $this->write(pack('C',
             Firmata::REPORT_VERSION));
@@ -818,12 +827,12 @@ class Device extends \PHPMake\SerialPort
         return $this->_version;
     }/*}}}*/
 
-    public function getVersion() 
+    public function getVersion()
     {/*{{{*/
         return $this->_version;
     }/*}}}*/
 
-    public function receive7bitBytesData() 
+    public function receive7bitBytesData()
     {/*{{{*/
         $lsb = $this->_getc() & 0x7F;
         $msb = $this->_getc() & 0x7F;
@@ -831,7 +840,7 @@ class Device extends \PHPMake\SerialPort
         return $msb<<7 | $lsb;
     }/*}}}*/
 
-    public function receiveSysEx7bitBytesData() 
+    public function receiveSysEx7bitBytesData()
     {/*{{{*/
         $data7bitByteArray = array();
         while (($c=$this->_getc()) != Firmata::SYSEX_END) {
@@ -841,7 +850,7 @@ class Device extends \PHPMake\SerialPort
         return self::dataWith7bitBytesArray($data7bitByteArray);
     }/*}}}*/
 
-    public static function dataWith7bitBytesArray(array $data7bitByteArray) 
+    public static function dataWith7bitBytesArray(array $data7bitByteArray)
     {/*{{{*/
         $data = '';
         $length = count($data7bitByteArray);
