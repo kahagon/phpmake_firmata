@@ -1,0 +1,7 @@
+{
+    "name": "phpmake/example-blink-led",
+    "type": "project",
+    "require": {
+        "phpmake/firmata": "dev-master"
+    }
+}
