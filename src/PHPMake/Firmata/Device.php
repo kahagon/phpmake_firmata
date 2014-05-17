@@ -11,7 +11,7 @@ use PHPMake\Firmata\Device;
  * This class presents Firmata device.
  */
 class Device extends \PHPMake\SerialPort
-{/*{{{*/
+{
     private $_putbackBuffer = array();
     private $_logger;
     private $_loop = false;
@@ -56,12 +56,12 @@ class Device extends \PHPMake\SerialPort
         $length = count($byteArray);
         $index = 0;
         while (true) {
-            $t = $this->_getc();
-            $c = $byteArray[$index];
-            $this->_logger->debug(sprintf('$t: %s, $c: %s', $t, $c));
-            if ($c == Firmata::ANY_BYTE || $t == $c) {
+            $actual = $this->_getc();
+            $expected = $byteArray[$index];
+            $this->_logger->debug(sprintf('$expected: 0x%02X, $actual: 0x%02X', $expected, $actual));
+            if ($expected == Firmata::ANY_BYTE || $actual == $expected) {
                 $this->_logger->debug('match');
-                $buffer[] = $t;
+                $buffer[] = $actual;
                 if ($index == $length-1) {
                     break;
                 } else {
@@ -869,4 +869,4 @@ class Device extends \PHPMake\SerialPort
 
         return $data;
     }/*}}}*/
-}/*}}}*/
+}
