@@ -532,6 +532,11 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
+    /**
+     * Return minimum interval for device loop in microseconds.
+     *
+     * @return int interval in microseconds.
+     */
     public static function getDeviceLoopMinIntervalInMicroseconds()
     {/*{{{*/
         return 5000;
@@ -628,17 +633,32 @@ class Device extends \PHPMake\SerialPort
         return $pinNumber;
     }/*}}}*/
 
+    /**
+     * Return array of \PHPMake\Firmata\Device\PinCapability
+     *
+     * @return \PHPMake\Firmata\Device\PinCapability[]
+     */
     public function getCapabilities()
     {/*{{{*/
         return $this->_capability;
     }/*}}}*/
 
+    /**
+     * Return pin capability.
+     * 
+     * @param $pin int pin number
+     * @return \PHPMake\Firmata\Device\PinCapability
+     * @see \PHPMake\Firmata\Device\PinCapability
+     */
     public function getCapability($pin)
     {/*{{{*/
         $pinNumber = $this->_pinNumber($pin);
         return $this->_capability[$pinNumber];
     }/*}}}*/
 
+    /**
+     * Return \PHPMake\Firmata\Device\Pin object.
+     */
     public function getPin($pin)
     {/*{{{*/
         $pinNumber = $this->_pinNumber($pin);
@@ -710,10 +730,31 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
+    /**
+     * Writes binary value to a pin.
+     *
+     * To invoke this, pin mode must be \PHPMake\Firmata::OUTPUT.
+     *
+     * If $value is \PHPMake\Firmata::LOW or a value which will be recognized as false,
+     * specified pin voltage will be low.
+     * Otherwise, the pin voltage will be high.
+     *
+     * @param int|\PHPMake\Firmata\Device\Pin $pin
+     * @param int $value
+     * @return void
+     */
     public function digitalWrite($pin, $value)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
+        $pinMode = $this->getPin($pinNumber)->getMode();
+        if ($pinMode != Firmata::OUTPUT) {
+            $this->_logger->warning(sprintf(
+                "pin(%d) mode is %s\n", 
+                $pinNumber, 
+                Firamta::modeStringFromCode($pinMode)));
+            return;
+        }
         $value = $value ? Firmata::HIGH : Firmata::LOW;
         $portNumber = self::portNumberForPin($pinNumber);
         $command = Firmata::MESSAGE_DIGITAL | $portNumber;
@@ -723,10 +764,43 @@ class Device extends \PHPMake\SerialPort
         $this->_pins[$pinNumber]->updateState($value?1:0);
     }/*}}}*/
 
+    /**
+     * Writes specified value to a pin with PWM.
+     *
+     * To invoke this, pin mode must be \PHPMake\Firmata::ANALOG.
+     *
+     * \PHPMake\Firmata\Device\PinCapability has PWM resolution information.
+     * Next example shows how to get maximum value for PWM.
+     * 
+     * <pre>
+     * $dev = new \PHPMake\Firmata\Device($devName);
+     * $capabilities = $dev->getCapabilities();
+     * $pinNumber = 13;
+     * $pinCapability = $dev->getPin($pinNumber)->getCapability();
+     * printf("pin %d analog max value: %d", 
+     *     $pinNumber, 
+     *     $pinCapability->getResolution(\PHPMake\Firmata::ANALOG) - 1);
+     * </pre>
+     *
+     * Maximum value should be resolution-1.
+     *
+     * @param int|\PHPMake\Firmata\Device\Pin $pin
+     * @param int $value
+     * @return void
+     * @see \PHPMake\Firmata\Device\PinCapability
+     */
     public function analogWrite($pin, $value)
     {/*{{{*/
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
+        $pinMode = $this->getPin($pinNumber)->getMode();
+        if ($pinMode != Firmata::ANALOG) {
+            $this->_logger->warning(sprintf(
+                "pin(%d) mode is %s\n", 
+                $pinNumber, 
+                Firamta::modeStringFromCode($pinMode)));
+            return;
+        }
         $v = $value;
         $this->write(pack('CCC',
             Firmata::SYSEX_START,
@@ -789,21 +863,51 @@ class Device extends \PHPMake\SerialPort
         }
     }/*}}}*/
 
+    /**
+     * Return port number which contains $pinNumber
+     *
+     * Port number which will be returned will be 0~15.
+     *
+     * @param int $pinNumber
+     * @return int port number
+     */
     public static function pinLocationInPort($pinNumber)
     {/*{{{*/
         return $pinNumber%8;
     }/*}}}*/
 
+    /**
+     * Return port number which located specified pin.
+     *
+     * @param int $pinNumber
+     * @return int port number
+     */
     public static function portNumberForPin($pinNumber)
     {/*{{{*/
         return floor($pinNumber/8);
     }/*}}}*/
 
+    /**
+     * Return pin number.
+     *
+     * @param int $pinLocationInPort
+     * @param int $portNumber
+     * @return int pin number
+     */
     public static function pinNumber($pinLocationInPort, $portNumber)
     {/*{{{*/
         return $portNumber*8 + $pinLocationInPort;
     }/*}}}*/
 
+    /**
+     * Issue a query for getting firmware info to device.
+     * Return an StdObject that contains firmware information.
+     *
+     * Instance has already firmware information since initialization.
+     * If you do not need to issue a query, simply invoke getFirmaware() method.
+     * 
+     * @return \StdObject contains firmware information
+     */
     public function queryFirmware()
     {/*{{{*/
         $this->write(pack('CCC',
@@ -814,11 +918,25 @@ class Device extends \PHPMake\SerialPort
         return $this->_firmware;
     }/*}}}*/
 
+    /**
+     * Return an StdObject that contains firmware information.
+     *
+     * @return \StdObject contains firmware information
+     */
     public function getFirmware()
     {/*{{{*/
         return $this->_firmware;
     }/*}}}*/
 
+    /**
+     * Issue a query for getting firmware version to device.
+     * Return an StdObject that contains version information.
+     *
+     * Instance has already version information since initialization.
+     * If you do not need to issue a query, simply invoke getVersion() method.
+     * 
+     * @return \StdObject contains version information
+     */
     public function queryVersion()
     {/*{{{*/
         $this->write(pack('C',
@@ -827,6 +945,11 @@ class Device extends \PHPMake\SerialPort
         return $this->_version;
     }/*}}}*/
 
+    /**
+     * Return an StdObject that contains version information.
+     *
+     * @return \StdObject contains version information
+     */
     public function getVersion()
     {/*{{{*/
         return $this->_version;
