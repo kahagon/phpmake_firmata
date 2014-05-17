@@ -1,5 +1,6 @@
 <?php
 namespace PHPMake\Firmata;
+use PHPMake\Firmata;
 
 class Exception extends \Exception {
 
