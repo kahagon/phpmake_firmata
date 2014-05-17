@@ -794,11 +794,11 @@ class Device extends \PHPMake\SerialPort
         $this->_logger->debug(__METHOD__);
         $pinNumber = $this->_pinNumber($pin);
         $pinMode = $this->getPin($pinNumber)->getMode();
-        if ($pinMode != Firmata::ANALOG) {
+        if ($pinMode != Firmata::PWM && $pinMode != Firmata::SERVO) {
             $this->_logger->warning(sprintf(
-                "pin(%d) mode is %s\n", 
+                "pin(%d) mode is %s", 
                 $pinNumber, 
-                Firamta::modeStringFromCode($pinMode)));
+                Firmata::modeStringFromCode($pinMode)));
             return;
         }
         $v = $value;

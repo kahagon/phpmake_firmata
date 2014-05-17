@@ -40,7 +40,7 @@ class Firmata {
     public static function getLogger() {
         if (!self::$_logger) {
             self::$_logger = new \PHPMake\Logger();
-            self::$_logger->setThreshold(\Psr\Log\LogLevel::ERROR);
+            self::$_logger->setThreshold(\Psr\Log\LogLevel::WARNING);
         }
 
         return self::$_logger;
