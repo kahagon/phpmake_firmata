@@ -2,8 +2,8 @@
     "name": "phpmake/firmata",
     "require": {
         "php": ">=5.3.0",
-        "ext-Gorilla": ">=0.5.0",
-        "phpmake/logger": "dev-master",
+        "ext-Gorilla": ">=0.5.2",
+        "phpmake/logger": "v0.1.0",
         "cboden/ratchet": "v0.3.0"
     },
     "autoload": {
