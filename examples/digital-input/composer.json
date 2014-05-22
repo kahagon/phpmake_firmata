@@ -1,0 +1,8 @@
+{
+    "name": "phpmake/example-digital-input",
+    "type": "project",
+    "require": {
+        "phpmake/firmata": "dev-master",
+        "zendframework/zendservice-twitter": "2.1.0"
+    }
+}
