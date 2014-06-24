@@ -41,6 +41,9 @@ class Device extends \PHPMake\SerialPort
      */
     public function __construct($deviceName, $baudRate=57600)
     {/*{{{*/
+        if (!$deviceName) {
+          throw Exception('invalid value for 1st argument');
+        }
         parent::__construct($deviceName);
         $this->_logger = Firmata::getLogger();
         $this->setBaudRate($baudRate)
