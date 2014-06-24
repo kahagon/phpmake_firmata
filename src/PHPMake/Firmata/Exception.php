@@ -8,7 +8,7 @@ class Exception extends \Exception {
     {
         parent::__construct($message, $code, $previous);
         Firmata::getLogger()
-            ->error(sprintf("Firmata Exception occurred. %s", $message);
+            ->error(sprintf("Firmata Exception occurred. %s", $message));
     }
 
 }
