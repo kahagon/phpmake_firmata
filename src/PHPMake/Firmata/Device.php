@@ -49,6 +49,7 @@ class Device extends \PHPMake\SerialPort
         $this->setBaudRate($baudRate)
                 ->setCanonical(false)
                 ->setVTime(0)->setVMin(1); // never modify
+        $this->flush();
         $this->_setup();
         $this->_initPins();
     }/*}}}*/
